@@ -43,6 +43,9 @@ target/
 .env.production.local
 *.pem
 
+# Local Journal
+journal.md
+
 # Fastlane / Mobile Builds
 *.mobileprovision
 *.hprof
