@@ -45,6 +45,9 @@ target/
 
 # Local Journal
 journal.md
+checklist-nfc-habit-tracker.md
+plan_precyzyjny_nfc.docx
+stitch_nfc_habit_tracker/
 
 # Fastlane / Mobile Builds
 *.mobileprovision

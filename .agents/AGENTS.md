@@ -8,3 +8,7 @@
 ## 2. Prowadzenie Dziennika Projektu (Journal)
 - Wszystkie raporty z wykonanych prac należy rejestrować w pliku `journal.md` w głównym katalogu projektu.
 - Każdy wpis w dzienniku musi zawierać datę, podjęte decyzje oraz listę zrealizowanych zadań.
+
+## 3. Komendy Terminala (Samodzielne wykonywanie w VS Code)
+- Nie wykonywać głównych komend terminala (np. `git`, `npm`, `npx`, `./mvnw`, `docker`) automatycznie.
+- Wszystkie komendy należy zawsze prezentować w czytelnych blokach kodu wraz z opisem i ścieżką katalogu (`Cwd`), aby użytkownik mógł je samodzielnie wklejać do terminala w Visual Studio Code IDE.
