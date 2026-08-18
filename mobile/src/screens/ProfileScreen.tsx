@@ -3,8 +3,13 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { theme } from '../theme';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 
-export const ProfileScreen: React.FC = () => {
+interface ProfileScreenProps {
+  onLogout: () => void;
+}
+
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
@@ -28,6 +33,14 @@ export const ProfileScreen: React.FC = () => {
           Funkcje społecznościowe (ranking, wyzwania grupowe) pojawią się w kolejnym etapie projektu.
         </Text>
       </Card>
+
+      <Button
+        title="Wyloguj się"
+        onPress={onLogout}
+        variant="outline"
+        style={styles.logoutButton}
+        textStyle={{ color: theme.colors.error }}
+      />
     </ScrollView>
   );
 };
@@ -108,5 +121,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
     fontFamily: theme.fonts.body,
+  },
+  logoutButton: {
+    marginTop: 24,
+    borderColor: theme.colors.error,
   },
 });

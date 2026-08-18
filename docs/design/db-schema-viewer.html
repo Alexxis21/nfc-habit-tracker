@@ -1,0 +1,470 @@
+<title>HabitApp DB Schema</title>
+<style>
+  :root {
+    --bg: #f4f7f7;
+    --surface: #ffffff;
+    --surface-2: #edf3f2;
+    --border: #d7e2e0;
+    --text: #10201d;
+    --text-dim: #55706b;
+    --text-faint: #8ba39d;
+    --accent: #00897a;
+    --accent-soft: #d9f2ee;
+    --pk: #a6690a;
+    --pk-soft: #fbedd6;
+    --fk: #2f6fb8;
+    --fk-soft: #dfeafb;
+    --uq: #7a4fc4;
+    --uq-soft: #ece3fb;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --shadow: 0 1px 2px rgba(16, 32, 29, 0.06), 0 8px 24px -12px rgba(16, 32, 29, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1513;
+      --surface: #141d1a;
+      --surface-2: #1a2521;
+      --border: #263531;
+      --text: #e7f1ee;
+      --text-dim: #93aaa4;
+      --text-faint: #5e746e;
+      --accent: #45d6bf;
+      --accent-soft: #123330;
+      --pk: #e8b361;
+      --pk-soft: #2e2415;
+      --fk: #7db2ec;
+      --fk-soft: #17263a;
+      --uq: #bfa1ec;
+      --uq-soft: #241d38;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0e1513;
+    --surface: #141d1a;
+    --surface-2: #1a2521;
+    --border: #263531;
+    --text: #e7f1ee;
+    --text-dim: #93aaa4;
+    --text-faint: #5e746e;
+    --accent: #45d6bf;
+    --accent-soft: #123330;
+    --pk: #e8b361;
+    --pk-soft: #2e2415;
+    --fk: #7db2ec;
+    --fk-soft: #17263a;
+    --uq: #bfa1ec;
+    --uq-soft: #241d38;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 8px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .meta {
+    display: flex;
+    gap: 18px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    flex-wrap: wrap;
+  }
+
+  .meta strong {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    margin: 22px 0 32px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex: none;
+  }
+  .dot.pk { background: var(--pk); }
+  .dot.fk { background: var(--fk); }
+  .dot.uq { background: var(--uq); }
+
+  section.group {
+    margin-bottom: 40px;
+  }
+
+  .group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .group-head h2 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  .group-head .count {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
+
+  .group-head .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-head .name {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .card-head .rows {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-faint);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  td {
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  td.col-name {
+    color: var(--text);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  td.col-type {
+    color: var(--text-dim);
+    text-align: right;
+    width: 1%;
+  }
+
+  .badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 1px 5px;
+    border-radius: 4px;
+    flex: none;
+  }
+  .badge.pk { color: var(--pk); background: var(--pk-soft); }
+  .badge.fk { color: var(--fk); background: var(--fk-soft); }
+  .badge.uq { color: var(--uq); background: var(--uq-soft); }
+
+  .nullable {
+    color: var(--text-faint);
+    font-style: italic;
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 22px; }
+    .cards { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="page">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Migracja V1 · schema public</p>
+      <h1>Schemat bazy danych — HabitApp</h1>
+    </div>
+    <div class="meta">
+      <span>baza <strong>habitapp</strong></span>
+      <span>PostgreSQL <strong>16.15</strong></span>
+      <span><strong>10</strong> tabel</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span class="legend-item"><span class="dot pk"></span>klucz główny (PK)</span>
+    <span class="legend-item"><span class="dot fk"></span>klucz obcy (FK)</span>
+    <span class="legend-item"><span class="dot uq"></span>ograniczenie UNIQUE</span>
+  </div>
+
+  <section class="group">
+    <div class="group-head">
+      <h2>Konta użytkowników</h2>
+      <span class="count">1 tabela</span>
+      <span class="rule"></span>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-head"><span class="name">users</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge uq">UQ</span>email</td><td class="col-type">varchar(255)</td></tr>
+          <tr><td class="col-name">password_hash</td><td class="col-type">varchar(255)</td></tr>
+          <tr><td class="col-name">display_name</td><td class="col-type">varchar(100)</td></tr>
+          <tr><td class="col-name nullable">avatar_url</td><td class="col-type">varchar(500)</td></tr>
+          <tr><td class="col-name">created_at</td><td class="col-type">timestamptz</td></tr>
+          <tr><td class="col-name">updated_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="group">
+    <div class="group-head">
+      <h2>Nawyki</h2>
+      <span class="count">3 tabele</span>
+      <span class="rule"></span>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-head"><span class="name">habit_category</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name">name</td><td class="col-type">varchar(100)</td></tr>
+          <tr><td class="col-name">color_hex</td><td class="col-type">varchar(7)</td></tr>
+          <tr><td class="col-name">icon</td><td class="col-type">varchar(20)</td></tr>
+          <tr><td class="col-name">created_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="name">habit_template</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>category_id</td><td class="col-type">→ habit_category</td></tr>
+          <tr><td class="col-name">title</td><td class="col-type">varchar(150)</td></tr>
+          <tr><td class="col-name">icon</td><td class="col-type">varchar(20)</td></tr>
+          <tr><td class="col-name">default_daily_target_count</td><td class="col-type">int = 1</td></tr>
+          <tr><td class="col-name nullable">unit_label</td><td class="col-type">varchar(50)</td></tr>
+          <tr><td class="col-name">default_time_of_day</td><td class="col-type">varchar(20)</td></tr>
+          <tr><td class="col-name">default_target_days_per_week</td><td class="col-type">int = 7</td></tr>
+          <tr><td class="col-name">created_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="name">habit</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>user_id</td><td class="col-type">→ users</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>template_id</td><td class="col-type">→ habit_template</td></tr>
+          <tr><td class="col-name">daily_target_count</td><td class="col-type">int = 1</td></tr>
+          <tr><td class="col-name">time_of_day</td><td class="col-type">varchar(20)</td></tr>
+          <tr><td class="col-name">target_days_per_week</td><td class="col-type">int</td></tr>
+          <tr><td class="col-name">scheduled_days</td><td class="col-type">jsonb</td></tr>
+          <tr><td class="col-name">current_streak</td><td class="col-type">int = 0</td></tr>
+          <tr><td class="col-name">reminders_enabled</td><td class="col-type">bool = true</td></tr>
+          <tr><td class="col-name">created_at</td><td class="col-type">timestamptz</td></tr>
+          <tr><td class="col-name">updated_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="group">
+    <div class="group-head">
+      <h2>Skany NFC</h2>
+      <span class="count">2 tabele</span>
+      <span class="rule"></span>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-head"><span class="name">nfc_tag</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span><span class="badge uq">UQ</span>habit_id</td><td class="col-type">→ habit</td></tr>
+          <tr><td class="col-name"><span class="badge uq">UQ</span>uid</td><td class="col-type">varchar(255)</td></tr>
+          <tr><td class="col-name">ndef_url</td><td class="col-type">varchar(500)</td></tr>
+          <tr><td class="col-name">created_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="name">scan_log</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>habit_id</td><td class="col-type">→ habit</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>nfc_tag_id</td><td class="col-type">→ nfc_tag</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>user_id</td><td class="col-type">→ users</td></tr>
+          <tr><td class="col-name">scanned_at</td><td class="col-type">timestamptz</td></tr>
+          <tr><td class="col-name">status</td><td class="col-type">varchar(30)</td></tr>
+          <tr><td class="col-name">points_awarded</td><td class="col-type">int = 0</td></tr>
+        </table>
+      </div>
+    </div>
+    <p style="font-family:var(--mono); font-size:11.5px; color:var(--text-faint); margin-top:10px;">
+      indeksy: <code>scan_log(habit_id, scanned_at)</code>, <code>scan_log(user_id)</code>
+    </p>
+  </section>
+
+  <section class="group">
+    <div class="group-head">
+      <h2>Społeczność i wyzwania</h2>
+      <span class="count">4 tabele</span>
+      <span class="rule"></span>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-head"><span class="name">friendship</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>user_id</td><td class="col-type">→ users</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>friend_id</td><td class="col-type">→ users</td></tr>
+          <tr><td class="col-name">status</td><td class="col-type">varchar(20)</td></tr>
+          <tr><td class="col-name">created_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="name">challenge</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>creator_id</td><td class="col-type">→ users</td></tr>
+          <tr><td class="col-name">title</td><td class="col-type">varchar(150)</td></tr>
+          <tr><td class="col-name">type</td><td class="col-type">varchar(30)</td></tr>
+          <tr><td class="col-name">target_value</td><td class="col-type">int</td></tr>
+          <tr><td class="col-name">start_date</td><td class="col-type">date</td></tr>
+          <tr><td class="col-name">end_date</td><td class="col-type">date</td></tr>
+          <tr><td class="col-name">created_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="name">challenge_participant</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>challenge_id</td><td class="col-type">→ challenge</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>user_id</td><td class="col-type">→ users</td></tr>
+          <tr><td class="col-name">progress_value</td><td class="col-type">int = 0</td></tr>
+          <tr><td class="col-name">joined_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="name">notification</span><span class="rows">0 wierszy</span></div>
+        <table>
+          <tr><td class="col-name"><span class="badge pk">PK</span>id</td><td class="col-type">bigserial</td></tr>
+          <tr><td class="col-name"><span class="badge fk">FK</span>user_id</td><td class="col-type">→ users</td></tr>
+          <tr><td class="col-name">type</td><td class="col-type">varchar(20)</td></tr>
+          <tr><td class="col-name">title</td><td class="col-type">varchar(150)</td></tr>
+          <tr><td class="col-name">body</td><td class="col-type">varchar(500)</td></tr>
+          <tr><td class="col-name">is_read</td><td class="col-type">bool = false</td></tr>
+          <tr><td class="col-name">created_at</td><td class="col-type">timestamptz</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Wygenerowano z <code>information_schema</code> bazy <code>habitapp</code> po zastosowaniu migracji <code>V1__init_schema.sql</code>.</span>
+    <span>Pełny diagram relacji: <code>docs/erd.md</code></span>
+  </footer>
+</div>

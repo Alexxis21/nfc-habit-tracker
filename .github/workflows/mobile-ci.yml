@@ -1,0 +1,39 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kodu
+        uses: actions/checkout@v4
+
+      - name: Konfiguracja Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Instalacja zależności
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Sprawdzenie typów TypeScript
+        working-directory: ./mobile
+        run: npx tsc --noEmit
+
+      - name: Uruchomienie testów
+        working-directory: ./mobile
+        run: npm test -- --watchAll=false

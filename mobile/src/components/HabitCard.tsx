@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Habit } from '../mocks/habits';
 import { theme } from '../theme';
 import { Card } from './ui/Card';
+import { getProgressRatio } from '../utils/habitProgress';
 
 interface HabitCardProps {
   habit: Habit;
@@ -11,9 +12,7 @@ interface HabitCardProps {
 }
 
 export const HabitCard: React.FC<HabitCardProps> = ({ habit, onPress, onToggleComplete }) => {
-  const progressRatio = habit.completedToday
-    ? 1
-    : Math.min(1, habit.streak / Math.max(1, habit.targetDaysPerWeek));
+  const progressRatio = getProgressRatio(habit.streak, habit.targetDaysPerWeek, habit.completedToday);
 
   return (
     <TouchableOpacity activeOpacity={0.9} onPress={() => onPress(habit)}>

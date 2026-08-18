@@ -25,10 +25,12 @@ Streak określa liczbę kolejnych dni/okresów, w których nawyk został wykonan
 - Dzień nawyku trwa od **00:00:00** do **23:59:59** w **lokalnej strefie czasowej użytkownika**.
 
 ### B. Zasady aktualizacji streaka:
-1. **Pierwszy skan w danym dniu:**
-   - Jeśli nawyk został skanowany wczoraj $\rightarrow$ `streak = streak + 1`.
-   - Jeśli nawyk został skanowany dzisiaj wcześniej $\rightarrow$ brak zmiany streaka.
-   - Jeśli ostatni skan był przedwczoraj lub dawniej $\rightarrow$ `streak = 1` (reset passy).
+1. **Osiągnięcie dziennego celu (`daily_target_count`):**
+   - Nawyki mogą wymagać więcej niż jednego odznaczenia dziennie (np. picie wody: 3× dziennie). Streak aktualizuje się dopiero, gdy liczba udanych skanów danego dnia osiągnie `daily_target_count` — nie przy pierwszym skanie z rzędu.
+   - Po osiągnięciu dziennego celu: jeśli nawyk był ukończony (cel osiągnięty) wczoraj $\rightarrow$ `streak = streak + 1`.
+   - Jeśli dzienny cel został już osiągnięty dzisiaj wcześniej $\rightarrow$ brak zmiany streaka (kolejne skany ponad cel nie liczą się do streaka, mogą jednak nadal naliczać punkty — patrz sekcja 4).
+   - Jeśli ostatni ukończony dzień był przedwczoraj lub dawniej $\rightarrow$ `streak = 1` (reset passy).
+   - Nawyki z `daily_target_count = 1` (domyślne, jednorazowe odznaczenie) działają tak jak dotychczas — pierwszy skan danego dnia od razu spełnia cel.
 2. **Nawyki o wyznaczonych dniach (np. Pon, Śr, Pt):**
    - Dni wolne zdefiniowane w harmonogramie nawyku nie przerywają streaka. Serwer sprawdza poprawność z uwzględnieniem oczekiwanych dni wykonania.
 

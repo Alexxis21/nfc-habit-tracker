@@ -11,7 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.habitapp.mobile",
       "infoPlist": {
-        "NFCReaderUsageDescription": "Aplikacja używa NFC do zbliżeniowego odczytu i zapisu naklejek nawyków."
+        "NFCReaderUsageDescription": "Aplikacja używa NFC do zbliżeniowego odczytu i zapisu naklejek nawyków.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -32,6 +33,11 @@
     },
     "plugins": [
       "react-native-nfc-manager"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9255e275-5af6-4f73-86c7-95ab17d26476"
+      }
+    }
   }
 }

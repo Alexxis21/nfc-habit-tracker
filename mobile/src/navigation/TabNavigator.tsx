@@ -20,7 +20,11 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'settings', label: 'Ustawienia', icon: '⚙️' },
 ];
 
-export const TabNavigator: React.FC = () => {
+interface TabNavigatorProps {
+  onLogout: () => void;
+}
+
+export const TabNavigator: React.FC<TabNavigatorProps> = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [overlay, setOverlay] = useState<Overlay>('none');
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
@@ -37,7 +41,7 @@ export const TabNavigator: React.FC = () => {
       case 'stats':
         return <StatsScreen />;
       case 'profile':
-        return <ProfileScreen />;
+        return <ProfileScreen onLogout={onLogout} />;
       case 'settings':
         return <SettingsScreen />;
       case 'home':
