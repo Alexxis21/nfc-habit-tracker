@@ -12,10 +12,6 @@ spring:
     locations: classpath:db/migration
 
   jpa:
-    # Flyway jest teraz właścicielem schematu (migracje w db/migration).
-    # 'validate' oznacza: Hibernate przy starcie sprawdza, czy encje @Entity
-    # zgadzają się ze schematem stworzonym przez Flyway, ale sam niczego
-    # nie tworzy ani nie zmienia w bazie.
     hibernate:
       ddl-auto: validate
     show-sql: true
@@ -25,3 +21,10 @@ spring:
 
 server:
   port: 8080
+
+app:
+  jwt:
+    secret: "zmien-mnie-na-dlugi-losowy-sekret-min-32-znaki-produkcyjnie-z-env"
+    expiration-ms: 86400000 # 24h
+  nfc:
+    scan-url: "habitapp://scan"

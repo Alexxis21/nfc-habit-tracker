@@ -1,0 +1,266 @@
+### Rejestracja nowego użytkownika (oczekiwane: 201 Created + token)
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "haslo1234",
+  "displayName": "Test User"
+}
+
+### Logowanie poprawnymi danymi (oczekiwane: 200 OK + token)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "haslo1234"
+}
+
+### Rejestracja tym samym mailem drugi raz (oczekiwane: 409 Conflict)
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "haslo1234",
+  "displayName": "Test User 2"
+}
+
+### Logowanie ze złym hasłem (oczekiwane: 401 Unauthorized)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "zlehaslo"
+}
+
+### Rejestracja ze zbyt krótkim hasłem (oczekiwane: 400 Bad Request)
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "password": "krotkie",
+  "displayName": "Test"
+}
+
+### Rejestracja z nieprawidłowym adresem e-mail (oczekiwane: 400 Bad Request)
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "to-nie-jest-email",
+  "password": "haslo1234",
+  "displayName": "Test"
+}
+
+
+### =========================================================================
+### CRUD dla nawyków — wklej token z odpowiedzi logowania (bez cudzysłowów) do @token
+### =========================================================================
+@token = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzkxMTI1MjQ4LCJleHAiOjE3OTEyMTE2NDh9.93duzRSFmJZxbnwKBKOpzVcuaJF5qKXwJpdMx0oJhVoCyXlCGzEqZQL4VjhBX5GELnncO56ZmjlUkoHpMNJIGg
+
+### Lista nawyków (oczekiwane: 200 OK, pusta lista [] za pierwszym razem)
+GET http://localhost:8080/api/habits
+Authorization: Bearer {{token}}
+
+### Lista nawyków bez tokenu (oczekiwane: 401/403 — endpoint chroniony)
+GET http://localhost:8080/api/habits
+
+### Utworzenie nawyku (oczekiwane: 201 Created + spłaszczony DTO z title/icon/category z szablonu)
+POST http://localhost:8080/api/habits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "templateId": 1,
+  "dailyTargetCount": 8,
+  "timeOfDay": "RANO",
+  "targetDaysPerWeek": 7,
+  "scheduledDays": [1, 2, 3, 4, 5, 6, 7],
+  "remindersEnabled": true
+}
+
+### Utworzenie nawyku z nieistniejącym templateId (oczekiwane: 404 Not Found)
+POST http://localhost:8080/api/habits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "templateId": 999,
+  "dailyTargetCount": 8,
+  "timeOfDay": "RANO",
+  "targetDaysPerWeek": 7,
+  "scheduledDays": [1, 2, 3],
+  "remindersEnabled": true
+}
+
+### Utworzenie nawyku z nieprawidłową wartością timeOfDay (oczekiwane: 400 Bad Request)
+POST http://localhost:8080/api/habits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "templateId": 1,
+  "dailyTargetCount": 8,
+  "timeOfDay": "PORANEK",
+  "targetDaysPerWeek": 7,
+  "scheduledDays": [1, 2, 3],
+  "remindersEnabled": true
+}
+
+### Aktualizacja nawyku — podmień {id} na id z odpowiedzi POST powyżej (oczekiwane: 200 OK)
+PUT http://localhost:8080/api/habits/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "templateId": 1,
+  "dailyTargetCount": 10,
+  "timeOfDay": "WIECZOR",
+  "targetDaysPerWeek": 5,
+  "scheduledDays": [1, 3, 5],
+  "remindersEnabled": false
+}
+
+### Aktualizacja nieistniejącego nawyku (oczekiwane: 404 Not Found)
+PUT http://localhost:8080/api/habits/9999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "templateId": 1,
+  "dailyTargetCount": 8,
+  "timeOfDay": "RANO",
+  "targetDaysPerWeek": 7,
+  "scheduledDays": [1, 2, 3],
+  "remindersEnabled": true
+}
+
+### Usunięcie nawyku — podmień {id} (oczekiwane: 204 No Content)
+DELETE http://localhost:8080/api/habits/1
+Authorization: Bearer {{token}}
+
+### Lista nawyków po usunięciu (oczekiwane: 200 OK, znów pusta lista)
+GET http://localhost:8080/api/habits
+Authorization: Bearer {{token}}
+
+
+### =========================================================================
+### Szablony nawyków
+### =========================================================================
+
+### Lista szablonów (oczekiwane: 200 OK, 8 szablonów z V3, spłaszczone category/categoryColor)
+GET http://localhost:8080/api/habit-templates
+Authorization: Bearer {{token}}
+
+### Lista szablonów bez tokenu (oczekiwane: 401/403 — endpoint chroniony)
+GET http://localhost:8080/api/habit-templates
+
+
+### =========================================================================
+### Naklejki NFC — przypisanie do nawyku (najpierw utwórz nawyk BEZ naklejki i podstaw jego id w URL)
+### Backend sam losuje tagId i zwraca gotowy ndefUrl do zapisania na naklejce — w żądaniu nie ma ciała.
+### =========================================================================
+
+### Przypisanie naklejki do nawyku (oczekiwane: 201 Created + losowy tagId i ndefUrl z tym tagId)
+POST http://localhost:8080/api/habits/1/tags
+Authorization: Bearer {{token}}
+
+### Drugie przypisanie do tego samego nawyku (oczekiwane: 409 Conflict — nawyk ma już naklejkę)
+POST http://localhost:8080/api/habits/1/tags
+Authorization: Bearer {{token}}
+
+### Przypisanie do nieistniejącego nawyku (oczekiwane: 404 Not Found)
+POST http://localhost:8080/api/habits/9999/tags
+Authorization: Bearer {{token}}
+
+
+### =========================================================================
+### Skanowanie NFC — POST /api/scan
+### Przygotowanie: utwórz nawyk z szablonu o dailyTargetCount = 1 (np. "Czytanie książki",
+### sprawdź templateId w GET /api/habit-templates), przypisz mu naklejkę (sekcja wyżej)
+### i użyj tego samego tagId poniżej.
+### =========================================================================
+
+### Pierwszy skan (oczekiwane: 200 OK, completedToday=true, currentStreak=1, pointsAwarded=12)
+POST http://localhost:8080/api/scan
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tagId": "04:A3:5B:12:7C:80:00",
+  "timeZone": "Europe/Warsaw"
+}
+
+### Drugi skan zaraz po pierwszym (oczekiwane: 409 Conflict — cooldown 5 minut)
+POST http://localhost:8080/api/scan
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tagId": "04:A3:5B:12:7C:80:00",
+  "timeZone": "Europe/Warsaw"
+}
+
+### Skan nieznanej naklejki (oczekiwane: 404 Not Found)
+POST http://localhost:8080/api/scan
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tagId": "04:00:00:00:00:00:00"
+}
+
+### Nieprawidłowa strefa czasowa (oczekiwane: 400 Bad Request)
+POST http://localhost:8080/api/scan
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tagId": "04:A3:5B:12:7C:80:00",
+  "timeZone": "Mars/Olympus"
+}
+
+### Skan bez tokenu (oczekiwane: 403)
+POST http://localhost:8080/api/scan
+Content-Type: application/json
+
+{
+  "tagId": "04:A3:5B:12:7C:80:00"
+}
+
+
+### Lista nawyków ze strefą czasową (oczekiwane: 200 OK; w nawyku z naklejką pola nfcTagUid, todayCount, lastScannedAt)
+GET http://localhost:8080/api/habits?timeZone=Europe/Warsaw
+Authorization: Bearer {{token}}
+
+
+### =========================================================================
+### Statystyki — GET /api/stats
+### =========================================================================
+
+### Statystyki z ostatnich 7 dni (oczekiwane: 200 OK; days ma 7 wpisów, habits z currentStreak i completionPercent)
+GET http://localhost:8080/api/stats?range=7d&timeZone=Europe/Warsaw
+Authorization: Bearer {{token}}
+
+### Statystyki z ostatnich 30 dni (oczekiwane: 200 OK; days ma 30 wpisów)
+GET http://localhost:8080/api/stats?range=30d&timeZone=Europe/Warsaw
+Authorization: Bearer {{token}}
+
+### Domyślny zakres bez parametrów (oczekiwane: 200 OK, range = 7d, strefa Europe/Warsaw)
+GET http://localhost:8080/api/stats
+Authorization: Bearer {{token}}
+
+### Nieprawidłowy zakres (oczekiwane: 400 Bad Request z komunikatem o dozwolonych wartościach)
+GET http://localhost:8080/api/stats?range=5d
+Authorization: Bearer {{token}}
+
+### Nieprawidłowa strefa czasowa (oczekiwane: 400 Bad Request)
+GET http://localhost:8080/api/stats?range=7d&timeZone=Mars/Olympus
+Authorization: Bearer {{token}}
+
+### Statystyki bez tokenu (oczekiwane: 403)
+GET http://localhost:8080/api/stats
