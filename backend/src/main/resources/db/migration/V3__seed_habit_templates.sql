@@ -1,0 +1,15 @@
+INSERT INTO habit_template (category_id, title, icon, default_daily_target_count, unit_label, default_time_of_day, default_target_days_per_week) VALUES
+    ((SELECT id FROM habit_category WHERE name = 'Zdrowie'), 'Picie wody', '💧', 8, 'szklanek', 'CALY_DZIEN', 7),
+    ((SELECT id FROM habit_category WHERE name = 'Zdrowie'), 'Branie witamin ', '☀️', 1, 'tabletki', 'CALY_DZIEN', 7),
+    ((SELECT id FROM habit_category WHERE name = 'Zdrowie'), 'Branie leków', '💊', 1, 'tabletki', 'CALY_DZIEN', 7),
+    ((SELECT id FROM habit_category WHERE name = 'Rozwój'),  'Czytanie książki', '📖', 1, NULL, 'WIECZOR', 5),
+    ((SELECT id FROM habit_category WHERE name = 'Rozwój'),  'Nauka języka', '🌍', 1, NULL, 'CALY_DZIEN', 5),
+    ((SELECT id FROM habit_category WHERE name = 'Rozwój'),  'Sudoku', '🔢', 1, NULL, 'CALY_DZIEN', 5),
+    ((SELECT id FROM habit_category WHERE name = 'Zdrowie'), 'Nitkowanie zębów', '🪥', 1, NULL, 'WIECZOR', 7),
+    ((SELECT id FROM habit_category WHERE name = 'Fit'),     'Trening siłowy lub cardio', '🏋️', 1, NULL, 'POPOLUDNIE', 4),
+    ((SELECT id FROM habit_category WHERE name = 'Fit'),     'Spacer z psem', '🦮', 3, NULL, 'CALY_DZIEN', 7),
+    ((SELECT id FROM habit_category WHERE name = 'Rozwój'),  'Sesja Deep Work', '🧠', 1, NULL, 'CALY_DZIEN', 5),
+    ((SELECT id FROM habit_category WHERE name = 'Rozwój'),  'Medytacja i ćwiczenia oddechowe', '🧘', 1, NULL, 'RANO', 7),
+    ((SELECT id FROM habit_category WHERE name = 'Fit'), 'Joga', '🧘‍♀️', 1, NULL, 'POPOLUDNIE', 7),
+    ((SELECT id FROM habit_category WHERE name = 'Rozwój'),  'Bez ekranów 30 min przed snem', '📵', 1, NULL, 'WIECZOR', 7),
+    ((SELECT id FROM habit_category WHERE name = 'Fit'),     'Spacer 10000 kroków', '🚶', 1, NULL, 'CALY_DZIEN', 5);
