@@ -1,1 +1,2 @@
-export const API_BASE_URL = 'http://192.168.50.146:8080/api';
+const API_URL = 'https://api.habitnfc.cloud/api';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? API_URL;
