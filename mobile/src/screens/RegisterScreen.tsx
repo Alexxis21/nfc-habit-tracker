@@ -3,6 +3,8 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, KeyboardAvoidingV
 import { theme } from '../theme';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../context/AuthContext';
+import { ApiError } from '../api/client';
 
 interface RegisterScreenProps {
   onRegisterSuccess: () => void;
@@ -10,10 +12,31 @@ interface RegisterScreenProps {
 }
 
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSuccess, onNavigateToLogin }) => {
+  const { register } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    if (password !== confirmPassword) {
+      setError('Hasła nie są identyczne');
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await register(email, password, displayName);
+      onRegisterSuccess();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -60,7 +83,16 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
           />
         </View>
 
-        <Button title="Zarejestruj się" onPress={onRegisterSuccess} size="lg" style={styles.submitButton} />
+        {error && <Text style={styles.errorText}>{error}</Text>}
+
+        <Button
+          title="Zarejestruj się"
+          onPress={handleSubmit}
+          size="lg"
+          style={styles.submitButton}
+          loading={isSubmitting}
+          disabled={!email || !password || !confirmPassword || !displayName}
+        />
 
         <View style={styles.footerRow}>
           <Text style={styles.footerText}>Masz już konto?</Text>
@@ -108,6 +140,13 @@ const styles = StyleSheet.create({
   },
   form: {
     marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 13,
+    color: theme.colors.error,
+    fontFamily: theme.fonts.body,
+    textAlign: 'center',
+    marginTop: 8,
   },
   submitButton: {
     marginTop: 16,

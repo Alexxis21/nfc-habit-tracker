@@ -4,12 +4,17 @@ import { theme } from '../theme';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../context/AuthContext';
 
 interface ProfileScreenProps {
   onLogout: () => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
+  const { user } = useAuth();
+  const displayName = user?.displayName ?? '';
+  const avatarInitial = displayName.charAt(0).toUpperCase() || '?';
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
@@ -19,10 +24,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
 
       <Card style={styles.profileCard}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>A</Text>
+          <Text style={styles.avatarText}>{avatarInitial}</Text>
         </View>
-        <Text style={styles.name}>Aleksandra</Text>
-        <Text style={styles.email}>aleksandra@habittrack.pl</Text>
+        <Text style={styles.name}>{displayName}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
         <Badge label="🔥 Poziom 4 · 320 XP" backgroundColor={theme.colors.secondaryContainer} color={theme.colors.primaryDark} style={{ marginTop: 10 }} />
       </Card>
 

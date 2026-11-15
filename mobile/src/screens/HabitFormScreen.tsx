@@ -1,80 +1,170 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { theme } from '../theme';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { PREDEFINED_HABITS, PredefinedHabit } from '../mocks/habits';
+import { getHabitTemplates, createHabit, updateHabit, HabitTemplateDto } from '../api/habits';
+import { Habit, TIME_OF_DAY_LABELS } from '../types/habit';
+import { ApiError } from '../api/client';
+import { assignAndWriteTag } from '../nfc/pairTag';
 
 interface HabitFormScreenProps {
+  habit? : Habit;
   onBack: () => void;
-  onSaveHabit: (newHabit: any) => void;
+  onSaveHabit: () => void;
 }
 
 const TIME_OF_DAY_OPTIONS = [
-  { key: 'Rano', label: 'Rano', icon: '☀️' },
-  { key: 'Popołudnie', label: 'Popołudnie', icon: '🌤️' },
-  { key: 'Wieczór', label: 'Wieczór', icon: '🌙' },
+  { key: 'Rano', label: 'Rano', icon: '☀️', backendValue: 'RANO' },
+  { key: 'Popołudnie', label: 'Popołudnie', icon: '🌤️', backendValue: 'POPOLUDNIE' },
+  { key: 'Wieczór', label: 'Wieczór', icon: '🌙', backendValue: 'WIECZOR' },
 ] as const;
 
+// Konwencja ISO 8601: poniedziałek = 1, ..., niedziela = 7 — tak samo interpretuje to backend.
+const DAY_TO_ISO: Record<string, number> = { Pn: 1, Wt: 2, Śr: 3, Cz: 4, Pt: 5, So: 6, Nd: 7 };
 const ALL_DAYS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
 
-export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ onBack, onSaveHabit }) => {
-  const [selectedHabitId, setSelectedHabitId] = useState<string>(PREDEFINED_HABITS[0].id);
+export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, onSaveHabit }) => {
+  const [templates, setTemplates] = useState<HabitTemplateDto[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [pairAfterSave, setPairAfterSave] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+    const initialDays = habit
+    ? ALL_DAYS.filter((d) => habit.scheduledDays.includes(DAY_TO_ISO[d]))
+    : ALL_DAYS;
+
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(habit?.templateId ?? null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const selectedHabit = PREDEFINED_HABITS.find((p) => p.id === selectedHabitId) || PREDEFINED_HABITS[0];
 
-  const [timeOfDay, setTimeOfDay] = useState<'Rano' | 'Popołudnie' | 'Wieczór'>('Popołudnie');
-  const [frequencyType, setFrequencyType] = useState<'daily' | 'custom'>('daily');
-  const [selectedDays, setSelectedDays] = useState<string[]>(ALL_DAYS);
-  const [nfcTagId, setNfcTagId] = useState('');
-  const [isPairingNfc, setIsPairingNfc] = useState(false);
+  const [timeOfDay, setTimeOfDay] = useState<'Rano' | 'Popołudnie' | 'Wieczór'>(
+    habit && habit.timeOfDay !== 'Cały dzień' ? habit.timeOfDay : 'Popołudnie'
+  );
+  const [frequencyType, setFrequencyType] = useState<'daily' | 'custom'>(
+    initialDays.length === ALL_DAYS.length ? 'daily' : 'custom'
+  );
+  const [selectedDays, setSelectedDays] = useState<string[]>(initialDays);
+  const [dailyTarget, setDailyTarget] = useState<number>(habit?.dailyTargetCount ?? 1);
 
-  const handleSelectPredefined = (predefined: PredefinedHabit) => {
-    setSelectedHabitId(predefined.id);
-    setIsDropdownOpen(false);
+  const isEditing = habit !== undefined;
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) ?? templates[0];
 
-    const tod = predefined.timeOfDay === 'Cały dzień' ? 'Popołudnie' : predefined.timeOfDay;
-    setTimeOfDay(tod);
+  useEffect(() => {
+    (async () => {
+      setIsLoadingTemplates(true);
+      setLoadError(null);
+      try {
+        const data = await getHabitTemplates();
+        setTemplates(data);
+        if (!habit && data.length > 0) {
+          setSelectedTemplateId(data[0].id);
+          applyTemplateDefaults(data[0]);
+        }
+      } catch (err) {
+        setLoadError(err instanceof ApiError ? err.message : 'Nie udało się pobrać listy nawyków');
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    })();
+  }, []);
 
-    if (predefined.targetDaysPerWeek >= 7) {
+  const applyTemplateDefaults = (template: HabitTemplateDto) => {
+    const label = TIME_OF_DAY_LABELS[template.defaultTimeOfDay];
+    setDailyTarget(template.defaultDailyTargetCount);
+    setTimeOfDay(label === 'Cały dzień' ? 'Popołudnie' : label);
+
+    if (template.defaultTargetDaysPerWeek >= 7) {
       setFrequencyType('daily');
       setSelectedDays(ALL_DAYS);
     } else {
       setFrequencyType('custom');
-      setSelectedDays(ALL_DAYS.slice(0, predefined.targetDaysPerWeek));
+      setSelectedDays(ALL_DAYS.slice(0, template.defaultTargetDaysPerWeek));
     }
   };
 
-  const handlePairNfc = () => {
-    setIsPairingNfc(true);
-    setTimeout(() => {
-      const generatedTagId = `NFC-TAG-${Math.floor(1000 + Math.random() * 9000)}`;
-      setNfcTagId(generatedTagId);
-      setIsPairingNfc(false);
-      Alert.alert('✅ Naklejka NFC Skonfigurowana!', `Przypisano identyfikator: ${generatedTagId}`);
-    }, 1500);
+  const handleSelectTemplate = (template: HabitTemplateDto) => {
+    setSelectedTemplateId(template.id);
+    setIsDropdownOpen(false);
+    if (!habit){
+      applyTemplateDefaults(template);
+    }
+    
   };
 
   const handleSkipNfc = () => {
-    Alert.alert('Dodano bez naklejki', 'Naklejkę NFC możesz sparować później w szczegółach nawyku.');
+    setPairAfterSave(false);
+    Alert.alert('Dodano bez naklejki', 'Naklejkę NFC możesz przypisać później w szczegółach nawyku.');
   };
 
-  const handleSubmit = () => {
-    const newHabit = {
-      id: `h_${Date.now()}`,
-      title: selectedHabit.title,
-      category: selectedHabit.category,
-      categoryColor: selectedHabit.categoryColor,
-      streak: 0,
-      targetDaysPerWeek: selectedDays.length,
-      completedToday: false,
-      icon: selectedHabit.icon,
-      timeOfDay,
-      nfcTagId: nfcTagId || undefined,
-    };
+    const handleSubmit = async () => {
+    if (!selectedTemplate) return;
 
-    onSaveHabit(newHabit);
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      const backendTimeOfDay = TIME_OF_DAY_OPTIONS.find((o) => o.key === timeOfDay)!.backendValue;
+      const payload = {
+        templateId: selectedTemplate.id,
+        dailyTargetCount: dailyTarget,
+        timeOfDay: backendTimeOfDay,
+        targetDaysPerWeek: selectedDays.length,
+        scheduledDays: selectedDays.map((d) => DAY_TO_ISO[d]),
+        remindersEnabled: habit ? habit.remindersEnabled : true,
+      };
+
+      if (habit) {
+        await updateHabit(habit.id, payload);
+        onSaveHabit();
+        return;
+      }
+
+      const created = await createHabit(payload);
+
+        if (pairAfterSave) {
+        try {
+          const outcome = await assignAndWriteTag(created.id);
+          if (outcome.status === 'written') {
+            Alert.alert('✅ Naklejka gotowa', 'Adres zapisany na naklejce.');
+          } else {
+            Alert.alert(
+              'Naklejka przypisana, ale nie zapisana',
+              `${outcome.reason}\n\nMożesz powtórzyć zapis w szczegółach nawyku.`
+            );
+          }
+        } catch (err) {
+          const reason = err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem';
+          Alert.alert(
+            'Nawyk zapisany, ale bez naklejki',
+            `${reason}\n\nMożesz przypisać naklejkę NFC później w szczegółach nawyku.`
+          );
+        }
+      }
+      onSaveHabit();
+    } catch (err) {
+      setSubmitError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoadingTemplates) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (loadError || !selectedTemplate) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>{loadError ?? 'Brak dostępnych szablonów nawyków'}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -83,11 +173,12 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ onBack, onSave
         <TouchableOpacity onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Dodaj Nawyk</Text>
+        <Text style={styles.title}>{habit ? 'Edytuj Nawyk' : 'Dodaj Nawyk'}</Text>
         <Text style={styles.menuIcon}>⋮</Text>
       </View>
-
-      {/* NFC Hero Card */}
+      
+      {/* NFC Hero Card */} 
+      {!habit && (  
       <Card style={styles.nfcCard}>
         <View style={styles.nfcTopRow}>
           <View style={styles.nfcTextCol}>
@@ -95,25 +186,30 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ onBack, onSave
               <View style={styles.readyDot} />
               <Text style={styles.nfcReadyLabel}>NFC READY</Text>
             </View>
-            <Text style={styles.nfcCardTitle}>Sparuj tag NFC</Text>
-            <Text style={styles.nfcCardSub}>Dotknij tagu, aby natychmiastowo połączyć.</Text>
+            <Text style={styles.nfcCardTitle}>Przypisz naklejkę NFC</Text>
+            <Text style={styles.nfcCardSub}>Naklejkę przypiszesz zaraz po zapisaniu nawyku.</Text>
           </View>
           <View style={styles.nfcIconBox}>
             <Text style={styles.nfcIconEmoji}>📶</Text>
           </View>
         </View>
 
-        {nfcTagId ? (
+        {pairAfterSave ? (
           <View style={styles.pairedSuccessBox}>
-            <Text style={styles.pairedText}>✅ Sparowano Tag: {nfcTagId}</Text>
+            <Text style={styles.pairedText}>✅ Naklejka zostanie przypisana po zapisaniu</Text>
+            <Button
+              title="Anuluj"
+              onPress={() => setPairAfterSave(false)}
+              variant="secondary"
+              style={{ marginTop: 10 }}
+            />
           </View>
         ) : (
           <View style={styles.nfcButtonRow}>
             <Button
-              title="Skanuj teraz"
-              onPress={handlePairNfc}
+              title="Przypisz po zapisaniu"
+              onPress={() => setPairAfterSave(true)}
               variant="outline"
-              loading={isPairingNfc}
               style={styles.nfcButtonHalf}
             />
             <Button
@@ -124,7 +220,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ onBack, onSave
             />
           </View>
         )}
-      </Card>
+      </Card> )}
 
       {/* Habit Name — predefined dropdown */}
       <Text style={styles.sectionLabel}>Nazwa nawyku</Text>
@@ -132,36 +228,37 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ onBack, onSave
         style={styles.dropdownHeader}
         onPress={() => setIsDropdownOpen(!isDropdownOpen)}
         activeOpacity={0.8}
+        disabled={isEditing}
       >
         <View style={styles.dropdownLeft}>
           <View style={styles.dropdownIconCircle}>
-            <Text style={styles.dropdownIconEmoji}>{selectedHabit.icon}</Text>
+            <Text style={styles.dropdownIconEmoji}>{selectedTemplate.icon}</Text>
           </View>
           <View style={styles.dropdownInfo}>
-            <Text style={styles.dropdownSelectedTitle}>{selectedHabit.title}</Text>
+            <Text style={styles.dropdownSelectedTitle}>{selectedTemplate.title}</Text>
             <Text style={styles.dropdownSelectedSub}>
-              {selectedHabit.category} • {selectedHabit.timeOfDay}
+              {selectedTemplate.category} • {TIME_OF_DAY_LABELS[selectedTemplate.defaultTimeOfDay]}
             </Text>
           </View>
         </View>
-        <Text style={styles.dropdownArrow}>{isDropdownOpen ? '▲' : '▼'}</Text>
+        <Text style={styles.dropdownArrow}>{isEditing ? '🔒' : isDropdownOpen ? '▲' : '▼'}</Text>
       </TouchableOpacity>
 
-      {isDropdownOpen && (
+      {isDropdownOpen && !isEditing && (
         <View style={styles.dropdownListContainer}>
-          {PREDEFINED_HABITS.map((item) => {
-            const isSelected = item.id === selectedHabitId;
+          {templates.map((item) => {
+            const isSelected = item.id === selectedTemplateId;
             return (
               <TouchableOpacity
                 key={item.id}
                 style={[styles.dropdownOptionItem, isSelected && styles.dropdownOptionActive]}
-                onPress={() => handleSelectPredefined(item)}
+                onPress={() => handleSelectTemplate(item)}
               >
                 <Text style={styles.optionEmoji}>{item.icon}</Text>
                 <View style={styles.optionInfo}>
                   <Text style={[styles.optionTitle, isSelected && styles.optionTitleActive]}>{item.title}</Text>
                   <Text style={styles.optionSub}>
-                    {item.category} • {item.timeOfDay}
+                    {item.category} • {TIME_OF_DAY_LABELS[item.defaultTimeOfDay]}
                   </Text>
                 </View>
                 {isSelected && <Text style={styles.checkMark}>✓</Text>}
@@ -170,6 +267,29 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ onBack, onSave
           })}
         </View>
       )}
+
+            {/* Daily target */}
+      <Text style={styles.sectionLabel}>Ile razy dziennie</Text>
+      <View style={styles.stepperRow}>
+        <TouchableOpacity
+          style={[styles.stepperBtn, dailyTarget <= 1 && styles.stepperBtnDisabled]}
+          onPress={() => setDailyTarget((n) => Math.max(1, n - 1))}
+          disabled={dailyTarget <= 1}
+        >
+          <Text style={styles.stepperBtnText}>−</Text>
+        </TouchableOpacity>
+        <View style={styles.stepperValueBox}>
+          <Text style={styles.stepperValue}>{dailyTarget}</Text>
+          <Text style={styles.stepperUnit}>{dailyTarget === 1 ? 'raz' : 'razy'} dziennie</Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.stepperBtn, dailyTarget >= 20 && styles.stepperBtnDisabled]}
+          onPress={() => setDailyTarget((n) => Math.min(20, n + 1))}
+          disabled={dailyTarget >= 20}
+        >
+          <Text style={styles.stepperBtnText}>+</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Frequency */}
       <Text style={styles.sectionLabel}>Częstotliwość</Text>
@@ -235,8 +355,16 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ onBack, onSave
         })}
       </View>
 
+      {submitError && <Text style={styles.errorText}>{submitError}</Text>}
+
       {/* Submit Button */}
-      <Button title="Zapisz Nawyk" onPress={handleSubmit} size="lg" style={styles.saveButton} />
+      <Button
+        title={habit ? 'Zapisz zmiany' : 'Zapisz Nawyk'}
+        onPress={handleSubmit}
+        size="lg"
+        style={styles.saveButton}
+        loading={isSubmitting}
+      />
     </ScrollView>
   );
 };
@@ -245,6 +373,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.containerMargin,
+  },
+  errorText: {
+    fontSize: 13,
+    color: theme.colors.error,
+    fontFamily: theme.fonts.body,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   content: {
     padding: theme.spacing.containerMargin,
@@ -433,6 +575,45 @@ const styles = StyleSheet.create({
   timeOfDayLabel: {
     fontSize: 12,
     fontWeight: '600',
+    color: theme.colors.onSurfaceVariant,
+    fontFamily: theme.fonts.label,
+  },
+    stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.surfaceContainer,
+    borderRadius: theme.borderRadius.lg,
+    padding: 8,
+  },
+  stepperBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#0F766E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperBtnDisabled: {
+    backgroundColor: '#CBD5E1',
+  },
+  stepperBtnText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 26,
+  },
+  stepperValueBox: {
+    alignItems: 'center',
+  },
+  stepperValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: theme.colors.onSurface,
+    fontFamily: theme.fonts.headline,
+  },
+  stepperUnit: {
+    fontSize: 12,
     color: theme.colors.onSurfaceVariant,
     fontFamily: theme.fonts.label,
   },

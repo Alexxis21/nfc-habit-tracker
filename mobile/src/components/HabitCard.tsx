@@ -1,14 +1,14 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Habit } from '../mocks/habits';
+import { Habit } from '../types/habit';
 import { theme } from '../theme';
 import { Card } from './ui/Card';
-import { getProgressRatio } from '../utils/habitProgress';
+import { getProgressRatio, getDailyStatusLabel } from '../utils/habitProgress';
 
 interface HabitCardProps {
   habit: Habit;
   onPress: (habit: Habit) => void;
-  onToggleComplete: (habitId: string) => void;
+  onToggleComplete: (habitId: number) => void;
 }
 
 export const HabitCard: React.FC<HabitCardProps> = ({ habit, onPress, onToggleComplete }) => {
@@ -49,7 +49,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, onPress, onToggleCo
             {Math.min(habit.streak, habit.targetDaysPerWeek)}/{habit.targetDaysPerWeek} dni w tyg.
           </Text>
           <Text style={[styles.statusLabel, habit.completedToday ? styles.statusDone : styles.statusPending]}>
-            {habit.completedToday ? 'Wykonano' : 'Oczekuje'}
+            {getDailyStatusLabel(habit.todayCount, habit.dailyTargetCount, habit.completedToday)}
           </Text>
         </View>
       </Card>

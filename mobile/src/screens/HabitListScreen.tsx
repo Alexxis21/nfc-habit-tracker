@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { MOCK_HABITS, MOCK_STATS, Habit } from '../mocks/habits';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Habit, mapHabitDtoToHabit, applyScanResult } from '../types/habit';
+import { getHabits } from '../api/habits';
+import { ApiError } from '../api/client';
 import { theme } from '../theme';
 import { HabitCard } from '../components/HabitCard';
 import { Card } from '../components/ui/Card';
 import { CircularProgress } from '../components/ui/CircularProgress';
+import { scanTag } from '../api/scan';
+import { getStats } from '../api/stats';
+import { Bar, toDailyBars } from '../utils/statsView';
 
 interface HabitListScreenProps {
   onSelectHabit: (habit: Habit) => void;
@@ -18,23 +23,46 @@ const MONTH_LABELS = [
 ];
 
 export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit, onAddNewHabit }) => {
-  const [habits, setHabits] = useState<Habit[]>(MOCK_HABITS);
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [weeklyBars, setWeeklyBars] = useState<Bar[]>([]);
 
-  const toggleComplete = (habitId: string) => {
-    setHabits((prev) =>
-      prev.map((h) => {
-        if (h.id === habitId) {
-          const newCompleted = !h.completedToday;
-          return {
-            ...h,
-            completedToday: newCompleted,
-            streak: newCompleted ? h.streak + 1 : Math.max(0, h.streak - 1),
-            lastScannedAt: newCompleted ? 'Przed chwilą (Skan NFC)' : h.lastScannedAt,
-          };
-        }
-        return h;
-      })
-    );
+
+  const loadHabits = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [dtos, stats] = await Promise.all([getHabits(), getStats('7d')]);
+      setHabits(dtos.map(mapHabitDtoToHabit));
+      setWeeklyBars(toDailyBars(stats.days));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadHabits();
+  }, [loadHabits]);
+
+  const handleScan = async (habitId: number) => {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    if (!habit.nfcTagId) {
+      Alert.alert('Brak naklejki', 'Najpierw przypisz naklejkę NFC do tego nawyku w jego szczegółach.');
+      return;
+    }
+
+    try {
+      const result = await scanTag(habit.nfcTagId);
+      setHabits((prev) => prev.map((h) => (h.id === habitId ? applyScanResult(h, result) : h)));
+      getStats('7d').then((stats) => setWeeklyBars(toDailyBars(stats.days))).catch(() => {});
+    } catch (err) {
+      Alert.alert('Skan nieudany', err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+    }
   };
 
   const completedCount = habits.filter((h) => h.completedToday).length;
@@ -44,6 +72,14 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
   const today = new Date();
   const dateLabel = `${WEEKDAY_LABELS[today.getDay()][0].toUpperCase()}${WEEKDAY_LABELS[today.getDay()].slice(1)}, ${today.getDate()} ${MONTH_LABELS[today.getMonth()]}`;
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -52,10 +88,12 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
 
       {/* Date + Greeting */}
       <Text style={styles.dateLabel}>{dateLabel}</Text>
-      <Text style={styles.greeting}>Dzień dobry, Aleksandro</Text>
+      <Text style={styles.greeting}>Dzień dobry</Text>
       <Text style={styles.greetingSub}>
         Jesteś na {bestStreak}-dniowej passie. Tak trzymaj! 🔥
       </Text>
+
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
       {/* Daily Goal Card */}
       <Card style={styles.goalCard}>
@@ -81,8 +119,12 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
         </TouchableOpacity>
       </View>
 
+      {habits.length === 0 && !error && (
+        <Text style={styles.emptyText}>Nie masz jeszcze żadnych nawyków — dodaj pierwszy przyciskiem ＋.</Text>
+      )}
+
       {habits.map((habit) => (
-        <HabitCard key={habit.id} habit={habit} onPress={onSelectHabit} onToggleComplete={toggleComplete} />
+        <HabitCard key={habit.id} habit={habit} onPress={onSelectHabit} onToggleComplete={handleScan} />
       ))}
 
       {/* Weekly Progress Card */}
@@ -90,12 +132,17 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
         <Text style={styles.weeklyTitle}>Postęp Tygodniowy</Text>
         <Text style={styles.weeklySub}>Ostatnie 7 dni</Text>
         <View style={styles.barChartContainer}>
-          {MOCK_STATS.weeklyHistory.map((item) => (
-            <View key={item.day} style={styles.barColumn}>
+            {weeklyBars.map((item, index) => (
+            <View key={`${item.label}-${index}`} style={styles.barColumn}>
               <View style={styles.barTrack}>
-                <View style={[styles.barFill, { height: `${(item.count / 5) * 100}%` }]} />
+                <View
+                  style={[
+                    styles.barFill,
+                    { height: `${(item.count / Math.max(1, habits.length)) * 100}%` },
+                  ]}
+                />
               </View>
-              <Text style={styles.barLabel}>{item.day}</Text>
+              <Text style={styles.barLabel}>{item.label}</Text>
             </View>
           ))}
         </View>
@@ -116,6 +163,12 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background,
   },
   content: {
     paddingHorizontal: theme.spacing.containerMargin,
@@ -147,6 +200,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 18,
     fontFamily: theme.fonts.body,
+  },
+  errorText: {
+    fontSize: 13,
+    color: theme.colors.error,
+    fontFamily: theme.fonts.body,
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: theme.colors.onSurfaceVariant,
+    fontFamily: theme.fonts.body,
+    marginBottom: 16,
   },
   goalCard: {
     flexDirection: 'row',

@@ -11,3 +11,14 @@ export const getProgressRatio = (
   if (completedToday) return 1;
   return Math.min(1, streak / Math.max(1, targetDaysPerWeek));
 };
+
+export const getDailyStatusLabel = (
+  todayCount: number,
+  dailyTargetCount: number,
+  completedToday: boolean
+): string => {
+  if (completedToday) return 'Wykonano';
+  if (dailyTargetCount <= 1) return 'Oczekuje';
+  const remaining = Math.max(0, dailyTargetCount - todayCount);
+  return `Dziś ${todayCount}/${dailyTargetCount} * pozostało ${remaining}`;
+};

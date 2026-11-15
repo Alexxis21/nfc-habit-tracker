@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
+import { BackHandler, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HabitListScreen } from '../screens/HabitListScreen';
 import { HabitFormScreen } from '../screens/HabitFormScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { HabitDetailScreen } from '../screens/HabitDetailScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
-import { Habit } from '../mocks/habits';
+import { Habit } from '../types/habit';
 import { theme } from '../theme';
 
 type Tab = 'home' | 'stats' | 'profile' | 'settings';
-type Overlay = 'none' | 'form' | 'detail';
+type Overlay = 'none' | 'form' | 'edit' | 'detail';
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'home', label: 'Home', icon: '🏠' },
@@ -25,6 +25,7 @@ interface TabNavigatorProps {
 }
 
 export const TabNavigator: React.FC<TabNavigatorProps> = ({ onLogout }) => {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [overlay, setOverlay] = useState<Overlay>('none');
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
@@ -35,6 +36,25 @@ export const TabNavigator: React.FC<TabNavigatorProps> = ({ onLogout }) => {
   };
 
   const closeOverlay = () => setOverlay('none');
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (overlay === 'edit') {
+        setOverlay('detail');
+        return true;
+      }
+      if (overlay !== 'none') {
+        setOverlay('none');
+        return true;
+      }
+      if (activeTab !== 'home') {
+        setActiveTab('home');
+        return true;
+      }
+      return false;
+    });
+    return () => subscription.remove();
+  }, [overlay, activeTab]);
 
   const renderTabScreen = () => {
     switch (activeTab) {
@@ -59,14 +79,34 @@ export const TabNavigator: React.FC<TabNavigatorProps> = ({ onLogout }) => {
     if (overlay === 'form') {
       return <HabitFormScreen onBack={closeOverlay} onSaveHabit={closeOverlay} />;
     }
+        if (overlay === 'edit' && selectedHabit) {
+      return (
+        <HabitFormScreen
+          habit={selectedHabit}
+          onBack={() => setOverlay('detail')}
+          onSaveHabit={closeOverlay}
+        />
+      );
+    }
     if (overlay === 'detail' && selectedHabit) {
-      return <HabitDetailScreen habit={selectedHabit} onBack={closeOverlay} />;
+      return (
+        <HabitDetailScreen
+          habit={selectedHabit}
+          onBack={closeOverlay}
+          onEdit={() => setOverlay('edit')}
+        />
+      );
     }
     return renderTabScreen();
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View
+      style={[
+        styles.safeArea,
+        { paddingTop: insets.top, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right },
+      ]}
+    >
       <View style={styles.content}>{renderScreen()}</View>
 
       <View style={styles.tabBar}>
@@ -87,7 +127,7 @@ export const TabNavigator: React.FC<TabNavigatorProps> = ({ onLogout }) => {
           );
         })}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

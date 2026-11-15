@@ -3,6 +3,8 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, KeyboardAvoidingV
 import { theme } from '../theme';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../context/AuthContext';
+import { ApiError } from '../api/client';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -10,8 +12,24 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavigateToRegister }) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      onLoginSuccess();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -43,7 +61,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
           />
         </View>
 
-        <Button title="Zaloguj się" onPress={onLoginSuccess} size="lg" style={styles.submitButton} />
+        {error && <Text style={styles.errorText}>{error}</Text>}
+
+        <Button
+          title="Zaloguj się"
+          onPress={handleSubmit}
+          size="lg"
+          style={styles.submitButton}
+          loading={isSubmitting}
+          disabled={!email || !password}
+        />
 
         <View style={styles.footerRow}>
           <Text style={styles.footerText}>Nie masz jeszcze konta?</Text>
@@ -91,6 +118,13 @@ const styles = StyleSheet.create({
   },
   form: {
     marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 13,
+    color: theme.colors.error,
+    fontFamily: theme.fonts.body,
+    textAlign: 'center',
+    marginTop: 8,
   },
   submitButton: {
     marginTop: 16,

@@ -1,16 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Habit } from '../mocks/habits';
+import { Habit, applyScanResult } from '../types/habit';
 import { theme } from '../theme';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { CircularProgress } from '../components/ui/CircularProgress';
 import { ConsistencyMap } from '../components/ConsistencyMap';
+import { scanTag } from '../api/scan';
+import { ApiError } from '../api/client';
+import { assignAndWriteTag } from '../nfc/pairTag';
+import { writeFailureMessage, writeNdefUrl } from '../nfc/writeNdefUrl';
+import { formatScanTime } from '../utils/formatScanTime';
+import { deleteHabit } from '../api/habits';
 
 interface HabitDetailScreenProps {
   habit: Habit;
   onBack: () => void;
+  onEdit: () => void;
 }
 
 const MILESTONE_THRESHOLDS = [7, 14, 30, 60, 100];
@@ -22,20 +29,77 @@ const getMilestoneTier = (streak: number) => {
   return { icon: '🥉', label: 'Nowicjusz' };
 };
 
-export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit, onBack }) => {
+export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: initialHabit, onBack, onEdit }) => {
+  const [habit, setHabit] = useState<Habit>(initialHabit);
   const nextThreshold = MILESTONE_THRESHOLDS.find((t) => t > habit.streak) ?? MILESTONE_THRESHOLDS[MILESTONE_THRESHOLDS.length - 1];
   const daysUntilNext = Math.max(0, nextThreshold - habit.streak);
   const milestonePercent = Math.min(100, (habit.streak / nextThreshold) * 100);
   const tier = getMilestoneTier(habit.streak);
   const isLinked = !!habit.nfcTagId;
 
-  const handleSimulateScan = () => {
-    Alert.alert('✅ Skan NFC Udany!', `Nawyk "${habit.title}" został zarejestrowany. Streak wzrósł!`);
+  const errorMessage = (err: unknown) =>
+    err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem';
+
+  const handleScan = async () => {
+    if (!habit.nfcTagId) return;
+    try {
+      const result = await scanTag(habit.nfcTagId);
+      setHabit(applyScanResult(habit, result));
+      Alert.alert('✅ Skan NFC udany!', `+${result.pointsAwarded} pkt • passa: ${result.currentStreak} dni`);
+    } catch (err) {
+      Alert.alert('Skan nieudany', errorMessage(err));
+    }
   };
 
-  const handleLinkTag = () => {
-    Alert.alert('📡 Parowanie naklejki', 'Zbliż telefon do naklejki NFC, aby ją połączyć z tym nawykiem.');
-  };
+        const handleLinkTag = async () => {
+      try {
+        const outcome = await assignAndWriteTag(habit.id);
+        setHabit({ ...habit, nfcTagId: outcome.tag.tagId, nfcTagUrl: outcome.tag.ndefUrl });
+        if (outcome.status === 'written') {
+          Alert.alert('✅ Naklejka gotowa', 'Adres zapisany na naklejce. Zbliż telefon do niej, aby zaliczyć nawyk.');
+        } else {
+          Alert.alert(
+            'Naklejka przypisana, ale nie zapisana',
+            `${outcome.reason}\n\nUżyj przycisku „Zapisz ponownie na naklejce”.`
+          );
+        }
+      } catch (err) {
+        Alert.alert('Nie udało się przypisać naklejki', errorMessage(err));
+      }
+    };
+
+    const handleRewriteTag = async () => {
+      if (!habit.nfcTagUrl) return;
+      const result = await writeNdefUrl(habit.nfcTagUrl);
+      if (result.status === 'written') {
+        Alert.alert('✅ Zapisano', writeFailureMessage(result));
+      } else if (result.status === 'failed') {
+        Alert.alert('Nie udało się zapisać', writeFailureMessage(result));
+      }
+    };
+
+    const handleDelete = () => {
+      Alert.alert(
+        'Usunąć nawyk?',
+        `„${habit.title}” zostanie usunięty razem z historią skanów i statystykami. Tej operacji nie można cofnąć.`,
+        [
+          { text: 'Anuluj', style: 'cancel' },
+          {
+            text: 'Usuń',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await deleteHabit(habit.id);
+                onBack();
+              } catch (err) {
+                Alert.alert('Nie udało się usunąć nawyku', errorMessage(err));
+              }
+            },
+          },
+        ]
+      );
+    };
+
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -90,32 +154,18 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit, onB
             </View>
             <View style={styles.nfcDetailRow}>
               <Text style={styles.nfcLabel}>Ostatni skan:</Text>
-              <Text style={styles.nfcVal}>{habit.lastScannedAt || 'Brak skanów'}</Text>
+              <Text style={styles.nfcVal}>{habit.lastScannedAt ? formatScanTime(habit.lastScannedAt) : 'Brak skanów'}</Text>
             </View>
 
-            <Button title="Przetestuj Skan Tego Tagu" onPress={handleSimulateScan} icon="📡" style={{ marginTop: 14 }} />
+            <Button title="Przetestuj Skan Tego Tagu" onPress={handleScan} icon="📡" style={{ marginTop: 14 }} />
+            <Button
+              title="Zapisz ponownie na naklejce"
+              onPress={handleRewriteTag}
+              variant="outline"
+              style={{ marginTop: 10 }}
+            />
           </Card>
 
-          {/* Recent History Log */}
-          <Card style={styles.historyCard}>
-            <Text style={styles.sectionTitle}>📜 Historia Zbliżeń NFC</Text>
-            <View style={styles.historyItem}>
-              <Text style={styles.histIcon}>✅</Text>
-              <View style={styles.histInfo}>
-                <Text style={styles.histTitle}>Zarejestrowano skan NFC</Text>
-                <Text style={styles.histDate}>Dzisiaj, 07:30 • Naklejka Kuchnia</Text>
-              </View>
-              <Badge label="+10 pkt" color={theme.colors.primaryDark} backgroundColor={theme.colors.secondaryContainer} />
-            </View>
-            <View style={styles.historyItem}>
-              <Text style={styles.histIcon}>✅</Text>
-              <View style={styles.histInfo}>
-                <Text style={styles.histTitle}>Zarejestrowano skan NFC</Text>
-                <Text style={styles.histDate}>Wczoraj, 07:45 • Naklejka Kuchnia</Text>
-              </View>
-              <Badge label="+10 pkt" color={theme.colors.primaryDark} backgroundColor={theme.colors.secondaryContainer} />
-            </View>
-          </Card>
         </>
       ) : (
         /* How it works — onboarding for a not-yet-linked habit */
@@ -161,6 +211,13 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit, onB
         <Text style={styles.sectionTitle}>Habit Details</Text>
 
         <View style={styles.tableRow}>
+          <Text style={styles.tableLabel}>Daily goal</Text>
+          <Text style={styles.tableValueBold}>
+            {habit.dailyTargetCount} {habit.dailyTargetCount === 1 ? 'raz' : 'razy'} dziennie
+          </Text>
+        </View>
+
+        <View style={styles.tableRow}>
           <Text style={styles.tableLabel}>Frequency</Text>
           <Text style={styles.tableValueBold}>Daily ({habit.targetDaysPerWeek}x/tyg)</Text>
         </View>
@@ -184,6 +241,8 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit, onB
           </Text>
         </View>
       </Card>
+      <Button title="Edytuj nawyk" onPress={onEdit} variant="outline" style={{ marginTop: 24 }} />
+      <Button title="Usuń nawyk" onPress={handleDelete} variant="danger" style={{ marginTop: 12 }} />
     </ScrollView>
   );
 };
@@ -259,33 +318,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: theme.colors.onSurface,
-  },
-  historyCard: {
-    marginBottom: 16,
-  },
-  historyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.surfaceContainer,
-  },
-  histIcon: {
-    fontSize: 18,
-    marginRight: 10,
-  },
-  histInfo: {
-    flex: 1,
-  },
-  histTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.onSurface,
-  },
-  histDate: {
-    fontSize: 11,
-    color: theme.colors.outline,
-    marginTop: 2,
   },
   howItWorksCard: {
     marginBottom: 16,

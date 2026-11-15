@@ -1,4 +1,4 @@
-import { getProgressRatio } from '../habitProgress';
+import { getProgressRatio, getDailyStatusLabel } from '../habitProgress';
 
 describe('getProgressRatio', () => {
   it('zwraca 1, gdy nawyk jest ukończony dzisiaj — niezależnie od streaka', () => {
@@ -17,5 +17,21 @@ describe('getProgressRatio', () => {
 
   it('nie dzieli przez zero, gdy cel tygodniowy wynosi 0', () => {
     expect(getProgressRatio(3, 0, false)).toBe(1);
+  });
+});
+
+describe('getDailyStatusLabel', () => {
+  it('zwraca "Wykonano", gdy cel dnia jest domknięty', () => {
+    expect(getDailyStatusLabel(8, 8, true)).toBe('Wykonano');
+    expect(getDailyStatusLabel(1, 1, true)).toBe('Wykonano');
+  });
+
+  it('dla celu 1 pokazuje po prostu "Oczekuje"', () => {
+    expect(getDailyStatusLabel(0, 1, false)).toBe('Oczekuje');
+  });
+
+  it('dla celu większego niż 1 pokazuje postęp i liczbę pozostałych skanów', () => {
+    expect(getDailyStatusLabel(3, 8, false)).toBe('Dziś 3/8 * pozostało 5');
+    expect(getDailyStatusLabel(0, 3, false)).toBe('Dziś 0/3 * pozostało 3');
   });
 });

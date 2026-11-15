@@ -1,35 +1,50 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { MOCK_STATS, MOCK_HABITS } from '../mocks/habits';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { theme } from '../theme';
 import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
 import { CircularProgress } from '../components/ui/CircularProgress';
 import { MonthlyStreakHeatmap } from '../components/MonthlyStreakHeatmap';
 import { BestStreakBanner } from '../components/BestStreakBanner';
-
-const MONTHLY_HISTORY = [
-  { day: 'Tydz 1', count: 24 },
-  { day: 'Tydz 2', count: 27 },
-  { day: 'Tydz 3', count: 22 },
-  { day: 'Tydz 4', count: 28 },
-];
+import { getStats, StatsDto } from '../api/stats';
+import { ApiError } from '../api/client';
+import { maxBarCount, pickBestStreak, toDailyBars, toWeeklyBars, topConsistent } from '../utils/statsView';
 
 type Range = 'weekly' | 'monthly';
 
 export const StatsScreen: React.FC = () => {
   const [range, setRange] = useState<Range>('weekly');
+  const [stats, setStats] = useState<StatsDto | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const bestHabit = [...MOCK_HABITS].sort((a, b) => b.streak - a.streak)[0];
-  const mostConsistent = [...MOCK_HABITS]
-    .map((h) => ({ ...h, percent: Math.min(100, Math.round((h.streak / h.targetDaysPerWeek) * 100)) }))
-    .sort((a, b) => b.percent - a.percent)
-    .slice(0, 3);
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
 
-  const chartData = range === 'weekly'
-    ? MOCK_STATS.weeklyHistory.map((d) => ({ label: d.day, count: d.count }))
-    : MONTHLY_HISTORY.map((d) => ({ label: d.day, count: d.count }));
-  const maxCount = Math.max(...chartData.map((d) => d.count));
+    getStats(range === 'weekly' ? '7d' : '30d')
+      .then((data) => {
+        if (!cancelled) setStats(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [range]);
+
+  const chartData = stats ? (range === 'weekly' ? toDailyBars(stats.days) : toWeeklyBars(stats.days)) : [];
+  const maxCount = maxBarCount(chartData);
+  const bestHabit = stats ? pickBestStreak(stats.habits) : null;
+  const mostConsistent = stats ? topConsistent(stats.habits) : [];
+  const periodLabel = range === 'weekly' ? '7 dniach' : '30 dniach';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -53,56 +68,88 @@ export const StatsScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Habit Consistency Card */}
-      <Card style={styles.chartCard}>
-        <View style={styles.chartHeaderRow}>
-          <Text style={styles.cardTitle}>Habit Consistency</Text>
-          <Badge label="+12% vs last week" backgroundColor="#DCFCE7" color="#15803D" />
+      {isLoading && (
+        <View style={styles.statusBox}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
-        <Text style={styles.chartSub}>Daily completion rate over the last {range === 'weekly' ? '7 days' : '4 weeks'}</Text>
+      )}
 
-        <View style={styles.barChartContainer}>
-          {chartData.map((item) => (
-            <View key={item.label} style={styles.barColumn}>
-              <View style={styles.barTrack}>
-                <View style={[styles.barFill, { height: `${(item.count / maxCount) * 100}%` }]} />
-              </View>
-              <Text style={styles.barLabel}>{item.label}</Text>
+      {!isLoading && error && <Text style={styles.errorText}>{error}</Text>}
+
+      {!isLoading && !error && stats && stats.habits.length === 0 && (
+        <Text style={styles.emptyText}>Dodaj pierwszy nawyk, aby zobaczyć statystyki.</Text>
+      )}
+
+      {!isLoading && !error && stats && stats.habits.length > 0 && (
+        <>
+          {/* Habit Consistency Card */}
+          <Card style={styles.chartCard}>
+            <View style={styles.chartHeaderRow}>
+              <Text style={styles.cardTitle}>Habit Consistency</Text>
             </View>
-          ))}
-        </View>
-      </Card>
-
-      {/* Best Active Streak Banner */}
-      <BestStreakBanner label="BEST ACTIVE STREAK" streakDays={bestHabit.streak} habitTitle={bestHabit.title} />
-
-      {/* Consistency Score */}
-      <Card style={styles.scoreCard}>
-        <Text style={styles.cardTitleSmall}>CONSISTENCY SCORE</Text>
-        <View style={styles.scoreRow}>
-          <CircularProgress percentage={MOCK_STATS.completionRatePercent} size={72} strokeWidth={8} label={`${MOCK_STATS.completionRatePercent}%`} />
-          <Text style={styles.scoreText}>Jesteś w top 5% użytkowników w tym miesiącu!</Text>
-        </View>
-      </Card>
-
-      {/* Most Consistent */}
-      <Card style={styles.consistentCard}>
-        <Text style={styles.cardTitle}>Most Consistent</Text>
-        {mostConsistent.map((h) => (
-          <View key={h.id} style={styles.consistentRow}>
-            <Text style={styles.consistentName} numberOfLines={1}>
-              {h.icon} {h.title}
+            <Text style={styles.chartSub}>
+              Habits completed per day over the last {range === 'weekly' ? '7 days' : '4 weeks'}
             </Text>
-            <View style={styles.consistentBarBg}>
-              <View style={[styles.consistentBarFill, { width: `${h.percent}%`, backgroundColor: h.categoryColor }]} />
-            </View>
-            <Text style={styles.consistentPercent}>{h.percent}%</Text>
-          </View>
-        ))}
-      </Card>
 
-      {/* Streak Trends Heatmap */}
-      <MonthlyStreakHeatmap title="Streak Trends" monthYearLabel="Sierpień 2026" />
+            <View style={styles.barChartContainer}>
+              {chartData.map((item, index) => (
+                <View key={`${item.label}-${index}`} style={styles.barColumn}>
+                  <View style={styles.barTrack}>
+                    <View style={[styles.barFill, { height: `${(item.count / maxCount) * 100}%` }]} />
+                  </View>
+                  <Text style={styles.barLabel}>{item.label}</Text>
+                </View>
+              ))}
+            </View>
+          </Card>
+
+          {/* Best Active Streak Banner */}
+          {bestHabit && (
+            <BestStreakBanner
+              label="BEST ACTIVE STREAK"
+              streakDays={bestHabit.currentStreak}
+              habitTitle={bestHabit.title}
+            />
+          )}
+
+          {/* Consistency Score */}
+          <Card style={styles.scoreCard}>
+            <Text style={styles.cardTitleSmall}>CONSISTENCY SCORE</Text>
+            <View style={styles.scoreRow}>
+              <CircularProgress
+                percentage={stats.completionRatePercentage}
+                size={72}
+                strokeWidth={8}
+                label={`${stats.completionRatePercentage}%`}
+              />
+              <Text style={styles.scoreText}>
+                Tyle zaplanowanych dni wykonałaś w ostatnich {periodLabel}.
+              </Text>
+            </View>
+          </Card>
+
+          {/* Most Consistent */}
+          <Card style={styles.consistentCard}>
+            <Text style={styles.cardTitle}>Most Consistent</Text>
+            {mostConsistent.map((h) => (
+              <View key={h.habitId} style={styles.consistentRow}>
+                <Text style={styles.consistentName} numberOfLines={1}>
+                  {h.icon} {h.title}
+                </Text>
+                <View style={styles.consistentBarBg}>
+                  <View
+                    style={[styles.consistentBarFill, { width: `${h.completionPercentage}%`, backgroundColor: h.categoryColor }]}
+                  />
+                </View>
+                <Text style={styles.consistentPercent}>{h.completionPercentage}%</Text>
+              </View>
+            ))}
+          </Card>
+
+          {/* Streak Trends Heatmap (na razie mock) */}
+          <MonthlyStreakHeatmap title="Streak Trends" monthYearLabel="Sierpień 2026" />
+        </>
+      )}
     </ScrollView>
   );
 };
@@ -267,5 +314,23 @@ const styles = StyleSheet.create({
     color: theme.colors.onSurfaceVariant,
     width: 36,
     textAlign: 'right',
+  },
+    statusBox: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  errorText: {
+    fontSize: 13,
+    color: theme.colors.error,
+    fontFamily: theme.fonts.body,
+    textAlign: 'center',
+    marginVertical: 24,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: theme.colors.onSurfaceVariant,
+    fontFamily: theme.fonts.body,
+    textAlign: 'center',
+    marginVertical: 24,
   },
 });
