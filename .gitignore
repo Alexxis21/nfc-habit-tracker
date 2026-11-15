@@ -42,13 +42,26 @@ target/
 .env.test.local
 .env.production.local
 *.pem
+.env.*
+!.env.example
+
 
 # Local Journal
 journal.md
 checklist-nfc-habit-tracker.md
 plan_precyzyjny_nfc.docx
 stitch_nfc_habit_tracker/
+docs/
+reports/
+thesis/
+research_notes/
+dokumenty/
+.claude/
+.agents/
+/*.pdf
+/*.pptx
 
 # Fastlane / Mobile Builds
 *.mobileprovision
 *.hprof
+*.keystore
