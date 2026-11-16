@@ -61,6 +61,10 @@ dokumenty/
 /*.pdf
 /*.pptx
 
+#Local AI assistant instruction files
+mobile/AGENTS.md
+mobile/CLAUDE.md
+
 # Fastlane / Mobile Builds
 *.mobileprovision
 *.hprof
