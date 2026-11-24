@@ -15,9 +15,9 @@ type Overlay = 'none' | 'form' | 'edit' | 'detail';
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'home', label: 'Home', icon: '🏠' },
-  { key: 'stats', label: 'Statystyki', icon: '📊' },
-  { key: 'profile', label: 'Profil', icon: '👤' },
-  { key: 'settings', label: 'Ustawienia', icon: '⚙️' },
+  { key: 'stats', label: 'Stats', icon: '📊' },
+  { key: 'profile', label: 'Profile', icon: '👤' },
+  { key: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
 interface TabNavigatorProps {

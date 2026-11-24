@@ -17,8 +17,8 @@ export const getDailyStatusLabel = (
   dailyTargetCount: number,
   completedToday: boolean
 ): string => {
-  if (completedToday) return 'Wykonano';
-  if (dailyTargetCount <= 1) return 'Oczekuje';
+  if (completedToday) return 'Done';
+  if (dailyTargetCount <= 1) return 'Pending';
   const remaining = Math.max(0, dailyTargetCount - todayCount);
-  return `Dziś ${todayCount}/${dailyTargetCount} * pozostało ${remaining}`;
+  return `Today ${todayCount}/${dailyTargetCount} * ${remaining} left`;
 };

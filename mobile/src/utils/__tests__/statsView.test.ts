@@ -27,7 +27,7 @@ describe('toDailyBars', () => {
   it('podpisuje słupki skrótami dni tygodnia', () => {
     const bars = toDailyBars(makeDays([1, 2, 3, 4, 5, 6, 7]));
 
-    expect(bars.map((b) => b.label)).toEqual(['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So']);
+    expect(bars.map((b) => b.label)).toEqual(['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']);
     expect(bars.map((b) => b.count)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 });
@@ -39,10 +39,10 @@ describe('toWeeklyBars', () => {
     const bars = toWeeklyBars(makeDays(counts));
 
     expect(bars).toEqual([
-      { label: 'Tydz 1', count: 7 },
-      { label: 'Tydz 2', count: 7 },
-      { label: 'Tydz 3', count: 7 },
-      { label: 'Tydz 4', count: 7 },
+      { label: 'Wk 1', count: 7 },
+      { label: 'Wk 2', count: 7 },
+      { label: 'Wk 3', count: 7 },
+      { label: 'Wk 4', count: 7 },
     ]);
   });
 });

@@ -83,8 +83,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 async function extractErrorMessage(response: Response): Promise<string> {
   try {
     const data = await response.json();
-    return data.error ?? 'Wystąpił nieoczekiwany błąd';
+    return data.error ?? 'An unexpected error occurred';
   } catch {
-    return 'Wystąpił nieoczekiwany błąd';
+    return 'An unexpected error occurred';
   }
 }

@@ -22,7 +22,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
 
   const handleSubmit = async () => {
     if (password !== confirmPassword) {
-      setError('Hasła nie są identyczne');
+      setError('Passwords do not match');
       return;
     }
 
@@ -32,7 +32,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
       await register(email, password, displayName);
       onRegisterSuccess();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+      setError(err instanceof ApiError ? err.message : 'Could not connect to the server');
     } finally {
       setIsSubmitting(false);
     }
@@ -45,12 +45,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.wordmark}>HabitTrack</Text>
-        <Text style={styles.title}>Załóż konto</Text>
-        <Text style={styles.subtitle}>Zacznij budować swoje nawyki ze zbliżeniem NFC.</Text>
+        <Text style={styles.title}>Create account</Text>
+        <Text style={styles.subtitle}>Start building your habits with a tap of NFC.</Text>
 
         <View style={styles.form}>
           <Input
-            label="Imię"
+            label="Name"
             placeholder="Aleksandra"
             value={displayName}
             onChangeText={setDisplayName}
@@ -58,7 +58,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
           />
           <Input
             label="E-mail"
-            placeholder="jan.kowalski@przyklad.pl"
+            placeholder="john.smith@example.com"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -66,7 +66,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
             icon="✉️"
           />
           <Input
-            label="Hasło"
+            label="Password"
             placeholder="••••••••"
             value={password}
             onChangeText={setPassword}
@@ -74,7 +74,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
             icon="🔒"
           />
           <Input
-            label="Powtórz hasło"
+            label="Repeat password"
             placeholder="••••••••"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -86,7 +86,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         <Button
-          title="Zarejestruj się"
+          title="Sign up"
           onPress={handleSubmit}
           size="lg"
           style={styles.submitButton}
@@ -95,9 +95,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegisterSucces
         />
 
         <View style={styles.footerRow}>
-          <Text style={styles.footerText}>Masz już konto?</Text>
+          <Text style={styles.footerText}>Already have an account?</Text>
           <TouchableOpacity onPress={onNavigateToLogin} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={styles.footerLink}> Zaloguj się</Text>
+            <Text style={styles.footerLink}> Log in</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

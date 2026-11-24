@@ -19,14 +19,14 @@ type ScanState =
 
 const toErrorState = (err: unknown): ScanState => {
   if (err instanceof UnauthorizedError) {
-    return { status: 'error', message: 'Zaloguj się, aby zaliczyć skan.', retryable: false };
+    return { status: 'error', message: 'Log in to register this scan.', retryable: false };
   }
   if (err instanceof ApiError) {
     return { status: 'error', message: err.message, retryable: err.status >= 500 };
   }
   return {
     status: 'error',
-    message: 'Nie udało się połączyć z serwerem. Sprawdź połączenie z internetem.',
+    message: 'Could not connect to the server. Check your internet connection.',
     retryable: true,
   };
 };
@@ -53,7 +53,7 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({ tagId, onDone, onLoginRe
     if (!tagId) {
       setState({
         status: 'error',
-        message: 'Nieprawidłowy link: brakuje identyfikatora naklejki.',
+        message: 'Invalid link: the sticker identifier is missing.',
         retryable: false,
       });
       return;
@@ -76,41 +76,41 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({ tagId, onDone, onLoginRe
       {state.status === 'loading' && (
         <>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.line}>Rejestruję skan…</Text>
+          <Text style={styles.line}>Registering scan…</Text>
         </>
       )}
 
       {state.status === 'success' && (
         <>
           <Text style={styles.icon}>{state.result.completedToday ? '🎉' : '✅'}</Text>
-          <Text style={styles.title}>Skan zaliczony</Text>
+          <Text style={styles.title}>Scan registered</Text>
           <Text style={styles.line}>
-            Dzisiaj: {state.result.todayCount}/{state.result.dailyTargetCount}
+            Today: {state.result.todayCount}/{state.result.dailyTargetCount}
           </Text>
-          <Text style={styles.line}>Passa: {state.result.currentStreak} dni</Text>
+          <Text style={styles.line}>Streak: {state.result.currentStreak} days</Text>
           {state.result.pointsAwarded > 0 ? (
-            <Text style={styles.points}>+{state.result.pointsAwarded} pkt</Text>
+            <Text style={styles.points}>+{state.result.pointsAwarded} pts</Text>
           ) : (
-          <Text style={styles.pointsNote}>Dodatkowe skany nie dają punktów</Text>
+          <Text style={styles.pointsNote}>Extra scans do not earn points</Text>
           )}
-          {state.result.completedToday && <Text style={styles.goal}>Cel na dziś osiągnięty!</Text>}
+          {state.result.completedToday && <Text style={styles.goal}>Daily goal reached!</Text>}
         </>
       )}
 
       {state.status === 'error' && (
         <>
           <Text style={styles.icon}>⚠️</Text>
-          <Text style={styles.title}>Skan nieudany</Text>
+          <Text style={styles.title}>Scan failed</Text>
           <Text style={styles.error}>{state.message}</Text>
         </>
       )}
 
       {canRetry && (
-        <Button title="Spróbuj ponownie" onPress={() => performScan(tagId!)} style={styles.button} />
+        <Button title="Try again" onPress={() => performScan(tagId!)} style={styles.button} />
       )}
       {state.status !== 'loading' && (
         <Button
-          title="Zamknij"
+          title="Close"
           onPress={onDone}
           variant={canRetry ? 'secondary' : 'primary'}
           style={canRetry ? styles.secondaryButton : styles.button}

@@ -28,7 +28,7 @@ export const StatsScreen: React.FC = () => {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+          setError(err instanceof ApiError ? err.message : 'Could not connect to the server');
         }
       })
       .finally(() => {
@@ -44,7 +44,7 @@ export const StatsScreen: React.FC = () => {
   const maxCount = maxBarCount(chartData);
   const bestHabit = stats ? pickBestStreak(stats.habits) : null;
   const mostConsistent = stats ? topConsistent(stats.habits) : [];
-  const periodLabel = range === 'weekly' ? '7 dniach' : '30 dniach';
+  const periodLabel = range === 'weekly' ? '7 days' : '30 days';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -77,7 +77,7 @@ export const StatsScreen: React.FC = () => {
       {!isLoading && error && <Text style={styles.errorText}>{error}</Text>}
 
       {!isLoading && !error && stats && stats.habits.length === 0 && (
-        <Text style={styles.emptyText}>Dodaj pierwszy nawyk, aby zobaczyć statystyki.</Text>
+        <Text style={styles.emptyText}>Add your first habit to see your stats.</Text>
       )}
 
       {!isLoading && !error && stats && stats.habits.length > 0 && (
@@ -123,7 +123,7 @@ export const StatsScreen: React.FC = () => {
                 label={`${stats.completionRatePercentage}%`}
               />
               <Text style={styles.scoreText}>
-                Tyle zaplanowanych dni wykonałaś w ostatnich {periodLabel}.
+                That many scheduled days completed in the last {periodLabel}.
               </Text>
             </View>
           </Card>
@@ -147,7 +147,7 @@ export const StatsScreen: React.FC = () => {
           </Card>
 
           {/* Streak Trends Heatmap (na razie mock) */}
-          <MonthlyStreakHeatmap title="Streak Trends" monthYearLabel="Sierpień 2026" />
+          <MonthlyStreakHeatmap title="Streak Trends" monthYearLabel="August 2026" />
         </>
       )}
     </ScrollView>

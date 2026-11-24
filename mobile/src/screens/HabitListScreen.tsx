@@ -16,10 +16,10 @@ interface HabitListScreenProps {
   onAddNewHabit: () => void;
 }
 
-const WEEKDAY_LABELS = ['niedziela', 'poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota'];
+const WEEKDAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTH_LABELS = [
-  'stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca',
-  'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia',
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
 export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit, onAddNewHabit }) => {
@@ -37,7 +37,7 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
       setHabits(dtos.map(mapHabitDtoToHabit));
       setWeeklyBars(toDailyBars(stats.days));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+      setError(err instanceof ApiError ? err.message : 'Could not connect to the server');
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +52,7 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
     if (!habit) return;
 
     if (!habit.nfcTagId) {
-      Alert.alert('Brak naklejki', 'Najpierw przypisz naklejkę NFC do tego nawyku w jego szczegółach.');
+      Alert.alert('No sticker', 'First assign an NFC sticker to this habit in its details.');
       return;
     }
 
@@ -61,7 +61,7 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
       setHabits((prev) => prev.map((h) => (h.id === habitId ? applyScanResult(h, result) : h)));
       getStats('7d').then((stats) => setWeeklyBars(toDailyBars(stats.days))).catch(() => {});
     } catch (err) {
-      Alert.alert('Skan nieudany', err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+      Alert.alert('Scan failed', err instanceof ApiError ? err.message : 'Could not connect to the server');
     }
   };
 
@@ -88,9 +88,9 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
 
       {/* Date + Greeting */}
       <Text style={styles.dateLabel}>{dateLabel}</Text>
-      <Text style={styles.greeting}>Dzień dobry</Text>
+      <Text style={styles.greeting}>Hello</Text>
       <Text style={styles.greetingSub}>
-        Jesteś na {bestStreak}-dniowej passie. Tak trzymaj! 🔥
+        You're on a {bestStreak}-day streak. Keep it up! 🔥
       </Text>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -104,23 +104,23 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
           label={`${dailyGoalPercent}%`}
         />
         <View style={styles.goalInfo}>
-          <Text style={styles.goalTitle}>Dzienny Cel</Text>
+          <Text style={styles.goalTitle}>Daily Goal</Text>
           <Text style={styles.goalSub}>
-            {completedCount} z {habits.length} nawyków wykonanych
+            {completedCount} of {habits.length} habits completed
           </Text>
         </View>
       </Card>
 
       {/* Active Habits Section */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Aktywne Nawyki</Text>
+        <Text style={styles.sectionTitle}>Active Habits</Text>
         <TouchableOpacity>
-          <Text style={styles.sectionLink}>Zobacz wszystkie ›</Text>
+          <Text style={styles.sectionLink}>See all ›</Text>
         </TouchableOpacity>
       </View>
 
       {habits.length === 0 && !error && (
-        <Text style={styles.emptyText}>Nie masz jeszcze żadnych nawyków — dodaj pierwszy przyciskiem ＋.</Text>
+        <Text style={styles.emptyText}>You have no habits yet — add your first one with the ＋ button.</Text>
       )}
 
       {habits.map((habit) => (
@@ -129,8 +129,8 @@ export const HabitListScreen: React.FC<HabitListScreenProps> = ({ onSelectHabit,
 
       {/* Weekly Progress Card */}
       <Card style={styles.weeklyCard}>
-        <Text style={styles.weeklyTitle}>Postęp Tygodniowy</Text>
-        <Text style={styles.weeklySub}>Ostatnie 7 dni</Text>
+        <Text style={styles.weeklyTitle}>Weekly Progress</Text>
+        <Text style={styles.weeklySub}>Last 7 days</Text>
         <View style={styles.barChartContainer}>
             {weeklyBars.map((item, index) => (
             <View key={`${item.label}-${index}`} style={styles.barColumn}>

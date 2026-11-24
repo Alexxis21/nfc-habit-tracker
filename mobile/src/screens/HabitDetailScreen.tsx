@@ -23,10 +23,10 @@ interface HabitDetailScreenProps {
 const MILESTONE_THRESHOLDS = [7, 14, 30, 60, 100];
 
 const getMilestoneTier = (streak: number) => {
-  if (streak >= 30) return { icon: '👑', label: 'Legenda Passy' };
+  if (streak >= 30) return { icon: '👑', label: 'Streak Legend' };
   if (streak >= 14) return { icon: '🏆', label: 'Master Practitioner' };
-  if (streak >= 7) return { icon: '🥈', label: 'Wytrwały Praktyk' };
-  return { icon: '🥉', label: 'Nowicjusz' };
+  if (streak >= 7) return { icon: '🥈', label: 'Persistent Practitioner' };
+  return { icon: '🥉', label: 'Beginner' };
 };
 
 export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: initialHabit, onBack, onEdit }) => {
@@ -38,17 +38,17 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
   const isLinked = !!habit.nfcTagId;
 
   const errorMessage = (err: unknown) =>
-    err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem';
+    err instanceof ApiError ? err.message : 'Could not connect to the server';
 
   const handleScan = async () => {
     if (!habit.nfcTagId) return;
     try {
       const result = await scanTag(habit.nfcTagId);
       setHabit(applyScanResult(habit, result));
-      const pointsText = result.pointsAwarded > 0 ? `+${result.pointsAwarded} pkt` : 'bez punktów (cel osiągnięty)';
-      Alert.alert('✅ Skan NFC udany!', `${pointsText} • passa: ${result.currentStreak} dni`);
+      const pointsText = result.pointsAwarded > 0 ? `+${result.pointsAwarded} pts` : 'no points (goal reached)';
+      Alert.alert('✅ NFC scan successful!', `${pointsText} • streak: ${result.currentStreak} days`);
     } catch (err) {
-      Alert.alert('Skan nieudany', errorMessage(err));
+      Alert.alert('Scan failed', errorMessage(err));
     }
   };
 
@@ -57,15 +57,15 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
         const outcome = await assignAndWriteTag(habit.id);
         setHabit({ ...habit, nfcTagId: outcome.tag.tagId, nfcTagUrl: outcome.tag.ndefUrl });
         if (outcome.status === 'written') {
-          Alert.alert('✅ Naklejka gotowa', 'Adres zapisany na naklejce. Zbliż telefon do niej, aby zaliczyć nawyk.');
+          Alert.alert('✅ Sticker ready', 'The address was written to the sticker. Hold your phone near it to log the habit.');
         } else {
           Alert.alert(
-            'Naklejka przypisana, ale nie zapisana',
-            `${outcome.reason}\n\nUżyj przycisku „Zapisz ponownie na naklejce”.`
+            'Sticker assigned but not written',
+            `${outcome.reason}\n\nUse the “Rewrite on sticker” button.`
           );
         }
       } catch (err) {
-        Alert.alert('Nie udało się przypisać naklejki', errorMessage(err));
+        Alert.alert('Could not assign the sticker', errorMessage(err));
       }
     };
 
@@ -73,27 +73,27 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
       if (!habit.nfcTagUrl) return;
       const result = await writeNdefUrl(habit.nfcTagUrl);
       if (result.status === 'written') {
-        Alert.alert('Zapisano', writeFailureMessage(result));
+        Alert.alert('Written', writeFailureMessage(result));
       } else if (result.status === 'failed') {
-        Alert.alert('Nie udało się zapisać', writeFailureMessage(result));
+        Alert.alert('Could not write', writeFailureMessage(result));
       }
     };
 
     const handleDelete = () => {
       Alert.alert(
-        'Usunąć nawyk?',
-        `„${habit.title}” zostanie usunięty razem z historią skanów i statystykami. Tej operacji nie można cofnąć.`,
+        'Delete habit?',
+        `“${habit.title}” will be deleted along with its scan history and statistics. This cannot be undone.`,
         [
-          { text: 'Anuluj', style: 'cancel' },
+          { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Usuń',
+            text: 'Delete',
             style: 'destructive',
             onPress: async () => {
               try {
                 await deleteHabit(habit.id);
                 onBack();
               } catch (err) {
-                Alert.alert('Nie udało się usunąć nawyku', errorMessage(err));
+                Alert.alert('Could not delete the habit', errorMessage(err));
               }
             },
           },
@@ -131,7 +131,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
             size={140}
             strokeWidth={12}
             label={`${habit.streak}`}
-            sublabel="DNI"
+            sublabel="DAYS"
           />
         </View>
 
@@ -148,19 +148,19 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
         <>
           {/* NFC Mapping Card */}
           <Card style={styles.nfcCard}>
-            <Text style={styles.sectionTitle}>🏷️ Zmapowany Tag NFC</Text>
+            <Text style={styles.sectionTitle}>🏷️ Linked NFC Tag</Text>
             <View style={styles.nfcDetailRow}>
-              <Text style={styles.nfcLabel}>Identyfikator NDEF:</Text>
+              <Text style={styles.nfcLabel}>NDEF identifier:</Text>
               <Text style={styles.nfcVal}>{habit.nfcTagId}</Text>
             </View>
             <View style={styles.nfcDetailRow}>
-              <Text style={styles.nfcLabel}>Ostatni skan:</Text>
-              <Text style={styles.nfcVal}>{habit.lastScannedAt ? formatScanTime(habit.lastScannedAt) : 'Brak skanów'}</Text>
+              <Text style={styles.nfcLabel}>Last scan:</Text>
+              <Text style={styles.nfcVal}>{habit.lastScannedAt ? formatScanTime(habit.lastScannedAt) : 'No scans'}</Text>
             </View>
 
-            <Button title="Przetestuj Skan Tego Tagu" onPress={handleScan} icon="📡" style={{ marginTop: 14 }} />
+            <Button title="Test Scan of This Tag" onPress={handleScan} icon="📡" style={{ marginTop: 14 }} />
             <Button
-              title="Zapisz ponownie na naklejce"
+              title="Rewrite on sticker"
               onPress={handleRewriteTag}
               variant="outline"
               style={{ marginTop: 10 }}
@@ -178,8 +178,8 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
               <Text style={styles.stepNumberText}>1</Text>
             </View>
             <View style={styles.stepInfo}>
-              <Text style={styles.stepTitle}>Zdobądź naklejkę NFC</Text>
-              <Text style={styles.stepDesc}>Naklejki samoprzylepne działają najlepiej. Umieść ją np. na kubku lub macie do jogi.</Text>
+              <Text style={styles.stepTitle}>Get an NFC sticker</Text>
+              <Text style={styles.stepDesc}>Adhesive stickers work best. Place it, for example, on a mug or a yoga mat.</Text>
             </View>
           </View>
 
@@ -188,8 +188,8 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
               <Text style={styles.stepNumberText}>2</Text>
             </View>
             <View style={styles.stepInfo}>
-              <Text style={styles.stepTitle}>Połącz naklejkę</Text>
-              <Text style={styles.stepDesc}>Dotknij „Połącz naklejkę" poniżej i zbliż telefon do naklejki.</Text>
+              <Text style={styles.stepTitle}>Link sticker</Text>
+              <Text style={styles.stepDesc}>Tap “Link sticker” below and hold your phone near the sticker.</Text>
             </View>
           </View>
 
@@ -198,12 +198,12 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
               <Text style={styles.stepNumberText}>3</Text>
             </View>
             <View style={styles.stepInfo}>
-              <Text style={styles.stepTitle}>Bez wysiłku</Text>
-              <Text style={styles.stepDesc}>Gdy skończysz, wystarczy zbliżyć telefon. Nawigacja w aplikacji nie jest potrzebna.</Text>
+              <Text style={styles.stepTitle}>Effortless</Text>
+              <Text style={styles.stepDesc}>Once done, just hold your phone near it. No need to navigate the app.</Text>
             </View>
           </View>
 
-          <Button title="Połącz naklejkę" onPress={handleLinkTag} icon="📡" variant="outline" style={{ marginTop: 18 }} />
+          <Button title="Link sticker" onPress={handleLinkTag} icon="📡" variant="outline" style={{ marginTop: 18 }} />
         </Card>
       )}
 
@@ -214,19 +214,19 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
         <View style={styles.tableRow}>
           <Text style={styles.tableLabel}>Daily goal</Text>
           <Text style={styles.tableValueBold}>
-            {habit.dailyTargetCount} {habit.dailyTargetCount === 1 ? 'raz' : 'razy'} dziennie
+            {habit.dailyTargetCount} {habit.dailyTargetCount === 1 ? 'time' : 'times'} per day
           </Text>
         </View>
 
         <View style={styles.tableRow}>
           <Text style={styles.tableLabel}>Frequency</Text>
-          <Text style={styles.tableValueBold}>Daily ({habit.targetDaysPerWeek}x/tyg)</Text>
+          <Text style={styles.tableValueBold}>Daily ({habit.targetDaysPerWeek}x/week)</Text>
         </View>
 
         <View style={styles.tableRow}>
           <Text style={styles.tableLabel}>Time of Day</Text>
           <Text style={styles.tableValueBold}>
-            {habit.timeOfDay} ({habit.timeOfDay === 'Rano' ? '6:00 - 10:00' : habit.timeOfDay === 'Popołudnie' ? '12:00 - 16:00' : '18:00 - 22:00'})
+            {habit.timeOfDay} ({habit.timeOfDay === 'Morning' ? '6:00 - 10:00' : habit.timeOfDay === 'Afternoon' ? '12:00 - 16:00' : '18:00 - 22:00'})
           </Text>
         </View>
 
@@ -242,8 +242,8 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
           </Text>
         </View>
       </Card>
-      <Button title="Edytuj nawyk" onPress={onEdit} variant="outline" style={{ marginTop: 24 }} />
-      <Button title="Usuń nawyk" onPress={handleDelete} variant="danger" style={{ marginTop: 12 }} />
+      <Button title="Edit habit" onPress={onEdit} variant="outline" style={{ marginTop: 24 }} />
+      <Button title="Delete habit" onPress={handleDelete} variant="danger" style={{ marginTop: 12 }} />
     </ScrollView>
   );
 };

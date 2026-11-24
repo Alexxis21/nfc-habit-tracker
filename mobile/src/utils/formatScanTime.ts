@@ -6,7 +6,7 @@ export function formatScanTime(iso: string, now: Date = new Date()): string {
   const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
   const diffDays = Math.round((startOfDay(now) - startOfDay(date)) / 86_400_000);
 
-  if (diffDays === 0) return `Dzisiaj, ${time}`;
-  if (diffDays === 1) return `Wczoraj, ${time}`;
+  if (diffDays === 0) return `Today, ${time}`;
+  if (diffDays === 1) return `Yesterday, ${time}`;
   return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}, ${time}`;
 }

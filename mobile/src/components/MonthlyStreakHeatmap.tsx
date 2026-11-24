@@ -27,15 +27,15 @@ const generateMockMonthlyData = (): DayHeatmapData[] => {
 
   return intensities.map((intensity, idx) => ({
     dayNumber: idx + 1,
-    dateStr: `${idx + 1} Sierpnia 2026`,
+    dateStr: `${idx + 1} August 2026`,
     intensity,
     count: intensity === 0 ? 0 : intensity === 1 ? 1 : intensity === 2 ? 3 : 5,
   }));
 };
 
 export const MonthlyStreakHeatmap: React.FC<MonthlyStreakHeatmapProps> = ({
-  title = 'Trendy Passy (Streak Trends)',
-  monthYearLabel = 'Sierpień 2026',
+  title = 'Streak Trends',
+  monthYearLabel = 'August 2026',
 }) => {
   const days = generateMockMonthlyData();
 
@@ -57,8 +57,8 @@ export const MonthlyStreakHeatmap: React.FC<MonthlyStreakHeatmapProps> = ({
     Alert.alert(
       `📅 ${day.dateStr}`,
       day.count > 0
-        ? `Liczba zbliżeń NFC: ${day.count}\nStatus: Streak Utrzymany 🔥`
-        : 'Brak zarejestrowanych skanów NFC w tym dniu.'
+        ? `NFC taps: ${day.count}\nStatus: Streak maintained 🔥`
+        : 'No NFC scans registered on this day.'
     );
   };
 
@@ -91,14 +91,14 @@ export const MonthlyStreakHeatmap: React.FC<MonthlyStreakHeatmapProps> = ({
 
       {/* Heatmap Legend Footer */}
       <View style={styles.legendContainer}>
-        <Text style={styles.legendText}>Mniej</Text>
+        <Text style={styles.legendText}>Less</Text>
         <View style={styles.legendRow}>
           <View style={[styles.legendBox, { backgroundColor: '#ECEEEF' }]} />
           <View style={[styles.legendBox, { backgroundColor: '#A7F3D0' }]} />
           <View style={[styles.legendBox, { backgroundColor: theme.colors.primary }]} />
           <View style={[styles.legendBox, { backgroundColor: '#006B5C' }]} />
         </View>
-        <Text style={styles.legendText}>Więcej</Text>
+        <Text style={styles.legendText}>More</Text>
       </View>
     </Card>
   );

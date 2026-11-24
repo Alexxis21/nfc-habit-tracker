@@ -12,7 +12,7 @@ export interface Habit {
   streak: number;
   targetDaysPerWeek: number;
   icon: string;
-  timeOfDay: 'Rano' | 'Popołudnie' | 'Wieczór' | 'Cały dzień';
+  timeOfDay: 'Morning' | 'Afternoon' | 'Evening' | 'All day';
   dailyTargetCount: number;
   todayCount: number;
   completedToday: boolean;
@@ -22,10 +22,10 @@ export interface Habit {
 }
 
 export const TIME_OF_DAY_LABELS: Record<HabitDto['timeOfDay'], Habit['timeOfDay']> = {
-  MORNING: 'Rano',
-  AFTERNOON: 'Popołudnie',
-  EVENING: 'Wieczór',
-  ALL_DAY: 'Cały dzień',
+  MORNING: 'Morning',
+  AFTERNOON: 'Afternoon',
+  EVENING: 'Evening',
+  ALL_DAY: 'All day',
 };
 
 export function mapHabitDtoToHabit(dto: HabitDto): Habit {

@@ -5,7 +5,7 @@ export interface Bar {
   count: number;
 }
 
-const WEEKDAY_SHORT = ['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So'];
+const WEEKDAY_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 export const toDailyBars = (days: DayStatsDto[]): Bar[] =>
   days.map((day) => ({
@@ -16,7 +16,7 @@ export const toDailyBars = (days: DayStatsDto[]): Bar[] =>
 export const toWeeklyBars = (days: DayStatsDto[], weeks = 4): Bar[] => {
   const lastDays = days.slice(-weeks * 7);
   return Array.from({ length: weeks }, (_, week) => ({
-    label: `Tydz ${week + 1}`,
+    label: `Wk ${week + 1}`,
     count: lastDays
       .slice(week * 7, week * 7 + 7)
       .reduce((sum, day) => sum + day.completedHabits, 0),

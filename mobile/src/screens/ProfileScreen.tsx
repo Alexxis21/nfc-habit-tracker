@@ -18,8 +18,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.subhead}>Twoje Konto</Text>
-        <Text style={styles.title}>Profil</Text>
+        <Text style={styles.subhead}>Your Account</Text>
+        <Text style={styles.title}>Profile</Text>
       </View>
 
       <Card style={styles.profileCard}>
@@ -28,19 +28,19 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
         </View>
         <Text style={styles.name}>{displayName}</Text>
         <Text style={styles.email}>{user?.email}</Text>
-        <Badge label="🔥 Poziom 4 · 320 XP" backgroundColor={theme.colors.secondaryContainer} color={theme.colors.primaryDark} style={{ marginTop: 10 }} />
+        <Badge label="🔥 Level 4 · 320 XP" backgroundColor={theme.colors.secondaryContainer} color={theme.colors.primaryDark} style={{ marginTop: 10 }} />
       </Card>
 
       <Card style={styles.comingSoonCard}>
         <Text style={styles.comingSoonIcon}>👥</Text>
-        <Text style={styles.comingSoonTitle}>Znajomi i wyzwania</Text>
+        <Text style={styles.comingSoonTitle}>Friends and challenges</Text>
         <Text style={styles.comingSoonText}>
-          Funkcje społecznościowe (ranking, wyzwania grupowe) pojawią się w kolejnym etapie projektu.
+          Social features (leaderboard, group challenges) will arrive in a later stage of the project.
         </Text>
       </Card>
 
       <Button
-        title="Wyloguj się"
+        title="Log out"
         onPress={onLogout}
         variant="outline"
         style={styles.logoutButton}

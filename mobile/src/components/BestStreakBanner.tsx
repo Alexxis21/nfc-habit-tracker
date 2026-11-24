@@ -11,7 +11,7 @@ interface BestStreakBannerProps {
 export const BestStreakBanner: React.FC<BestStreakBannerProps> = ({
   label = 'BEST ACTIVE STREAK',
   streakDays = 14,
-  habitTitle = 'Poranne picie szklanki wody',
+  habitTitle = 'Morning glass of water',
 }) => {
   return (
     <View style={styles.banner}>
@@ -19,7 +19,7 @@ export const BestStreakBanner: React.FC<BestStreakBannerProps> = ({
         <Text style={styles.subhead}>{label}</Text>
         <View style={styles.numberRow}>
           <Text style={styles.number}>{streakDays}</Text>
-          <Text style={styles.unit}> Dni</Text>
+          <Text style={styles.unit}> Days</Text>
         </View>
         <Text style={styles.habitTitle} numberOfLines={1}>
           {habitTitle}

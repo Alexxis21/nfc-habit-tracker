@@ -22,9 +22,9 @@ export const NfcWritePrompt: React.FC = () => {
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <Text style={styles.icon}>📶</Text>
-          <Text style={styles.title}>Zbliż telefon do naklejki NFC</Text>
-          <Text style={styles.text}>Przytrzymaj go nieruchomo, aż zapis się zakończy.</Text>
-          <Button title="Anuluj" onPress={handleCancel} variant="secondary" style={styles.button} />
+          <Text style={styles.title}>Hold your phone near the NFC sticker</Text>
+          <Text style={styles.text}>Hold it still until writing finishes.</Text>
+          <Button title="Cancel" onPress={handleCancel} variant="secondary" style={styles.button} />
         </View>
       </View>
     </Modal>

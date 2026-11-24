@@ -49,9 +49,9 @@ export const SettingsScreen: React.FC = () => {
       if (bytes) {
         await NfcManager.ndefHandler.writeNdefMessage(bytes);
       }
-      setNfcResult(`✅ Zapisano na tagu: ${TEST_URI}`);
+      setNfcResult(`✅ Written to tag: ${TEST_URI}`);
     } catch (error) {
-      setNfcResult(`❌ Błąd zapisu: ${String(error)}`);
+      setNfcResult(`❌ Write error: ${String(error)}`);
     } finally {
       NfcManager.cancelTechnologyRequest().catch(() => {});
       setIsWriting(false);
@@ -68,11 +68,11 @@ export const SettingsScreen: React.FC = () => {
       const uri = record ? Ndef.uri.decodePayload(Uint8Array.from(record.payload)) : null;
       setNfcResult(
         uri
-          ? `✅ Odczytano tag. URI: ${uri}\nID tagu: ${tag?.id}`
-          : `✅ Odczytano tag (bez rekordu URI).\nID tagu: ${tag?.id}\nSurowe dane: ${JSON.stringify(tag)}`
+          ? `✅ Tag read. URI: ${uri}\nTag ID: ${tag?.id}`
+          : `✅ Tag read (no URI record).\nTag ID: ${tag?.id}\nRaw data: ${JSON.stringify(tag)}`
       );
     } catch (error) {
-      setNfcResult(`❌ Błąd odczytu: ${String(error)}`);
+      setNfcResult(`❌ Read error: ${String(error)}`);
     } finally {
       NfcManager.cancelTechnologyRequest().catch(() => {});
       setIsReading(false);
@@ -82,31 +82,31 @@ export const SettingsScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.subhead}>Konfiguracja</Text>
-        <Text style={styles.title}>Ustawienia</Text>
+        <Text style={styles.subhead}>Configuration</Text>
+        <Text style={styles.title}>Settings</Text>
       </View>
 
       <Card style={styles.card}>
-        <SettingsRow icon="🔔" label="Powiadomienia o przypomnieniach" value={notifications} onChange={setNotifications} />
-        <SettingsRow icon="📡" label="Auto-otwieranie po skanie NFC" value={nfcAutoOpen} onChange={setNfcAutoOpen} />
-        <SettingsRow icon="🌙" label="Tryb ciemny" value={darkMode} onChange={setDarkMode} />
+        <SettingsRow icon="🔔" label="Reminder notifications" value={notifications} onChange={setNotifications} />
+        <SettingsRow icon="📡" label="Auto-open after NFC scan" value={nfcAutoOpen} onChange={setNfcAutoOpen} />
+        <SettingsRow icon="🌙" label="Dark mode" value={darkMode} onChange={setDarkMode} />
       </Card>
 
       <Card style={styles.card}>
-        <Text style={styles.diagTitle}>🧪 PoC Etap 1: Zapis / Odczyt NDEF</Text>
+        <Text style={styles.diagTitle}>🧪 PoC Stage 1: NDEF Write / Read</Text>
         <Text style={styles.diagSub}>
-          Zbliż telefon do naklejki NTAG215, gdy pojawi się systemowy panel skanowania.
+          Hold your phone near an NTAG215 sticker when the system scan panel appears.
         </Text>
         <View style={styles.nfcButtonRow}>
           <Button
-            title="Zapisz testowy tag"
+            title="Write test tag"
             onPress={handleWriteTest}
             variant="outline"
             loading={isWriting}
             style={styles.nfcButtonHalf}
           />
           <Button
-            title="Odczytaj tag"
+            title="Read tag"
             onPress={handleReadTest}
             variant="secondary"
             loading={isReading}
@@ -118,7 +118,7 @@ export const SettingsScreen: React.FC = () => {
 
       <Card style={styles.aboutCard}>
         <Text style={styles.aboutTitle}>HabitTrack NFC</Text>
-        <Text style={styles.aboutText}>Wersja 1.0.0 (build w toku — Etap 1)</Text>
+        <Text style={styles.aboutText}>Version 1.0.0 (build in progress — Stage 1)</Text>
       </Card>
     </ScrollView>
   );

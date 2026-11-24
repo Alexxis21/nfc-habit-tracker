@@ -15,14 +15,14 @@ interface HabitFormScreenProps {
 }
 
 const TIME_OF_DAY_OPTIONS = [
-  { key: 'Rano', label: 'Rano', icon: '☀️', backendValue: 'MORNING' },
-  { key: 'Popołudnie', label: 'Popołudnie', icon: '🌤️', backendValue: 'AFTERNOON' },
-  { key: 'Wieczór', label: 'Wieczór', icon: '🌙', backendValue: 'EVENING' },
+  { key: 'Morning', label: 'Morning', icon: '☀️', backendValue: 'MORNING' },
+  { key: 'Afternoon', label: 'Afternoon', icon: '🌤️', backendValue: 'AFTERNOON' },
+  { key: 'Evening', label: 'Evening', icon: '🌙', backendValue: 'EVENING' },
 ] as const;
 
 // Konwencja ISO 8601: poniedziałek = 1, ..., niedziela = 7 — tak samo interpretuje to backend.
-const DAY_TO_ISO: Record<string, number> = { Pn: 1, Wt: 2, Śr: 3, Cz: 4, Pt: 5, So: 6, Nd: 7 };
-const ALL_DAYS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
+const DAY_TO_ISO: Record<string, number> = { Mo: 1, Tu: 2, We: 3, Th: 4, Fr: 5, Sa: 6, Su: 7 };
+const ALL_DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, onSaveHabit }) => {
   const [templates, setTemplates] = useState<HabitTemplateDto[]>([]);
@@ -40,8 +40,8 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(habit?.templateId ?? null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const [timeOfDay, setTimeOfDay] = useState<'Rano' | 'Popołudnie' | 'Wieczór'>(
-    habit && habit.timeOfDay !== 'Cały dzień' ? habit.timeOfDay : 'Popołudnie'
+  const [timeOfDay, setTimeOfDay] = useState<'Morning' | 'Afternoon' | 'Evening'>(
+    habit && habit.timeOfDay !== 'All day' ? habit.timeOfDay : 'Afternoon'
   );
   const [frequencyType, setFrequencyType] = useState<'daily' | 'custom'>(
     initialDays.length === ALL_DAYS.length ? 'daily' : 'custom'
@@ -64,7 +64,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
           applyTemplateDefaults(data[0]);
         }
       } catch (err) {
-        setLoadError(err instanceof ApiError ? err.message : 'Nie udało się pobrać listy nawyków');
+        setLoadError(err instanceof ApiError ? err.message : 'Could not load the habit list');
       } finally {
         setIsLoadingTemplates(false);
       }
@@ -74,7 +74,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
   const applyTemplateDefaults = (template: HabitTemplateDto) => {
     const label = TIME_OF_DAY_LABELS[template.defaultTimeOfDay];
     setDailyTarget(template.defaultDailyTargetCount);
-    setTimeOfDay(label === 'Cały dzień' ? 'Popołudnie' : label);
+    setTimeOfDay(label === 'All day' ? 'Afternoon' : label);
 
     if (template.defaultTargetDaysPerWeek >= 7) {
       setFrequencyType('daily');
@@ -96,7 +96,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
 
   const handleSkipNfc = () => {
     setPairAfterSave(false);
-    Alert.alert('Dodano bez naklejki', 'Naklejkę NFC możesz przypisać później w szczegółach nawyku.');
+    Alert.alert('Added without a sticker', 'You can assign an NFC sticker later in the habit details.');
   };
 
     const handleSubmit = async () => {
@@ -127,24 +127,24 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
         try {
           const outcome = await assignAndWriteTag(created.id);
           if (outcome.status === 'written') {
-            Alert.alert('✅ Naklejka gotowa', 'Adres zapisany na naklejce.');
+            Alert.alert('✅ Sticker ready', 'The address was written to the sticker.');
           } else {
             Alert.alert(
-              'Naklejka przypisana, ale nie zapisana',
-              `${outcome.reason}\n\nMożesz powtórzyć zapis w szczegółach nawyku.`
+              'Sticker assigned but not written',
+              `${outcome.reason}\n\nYou can retry writing it in the habit details.`
             );
           }
         } catch (err) {
-          const reason = err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem';
+          const reason = err instanceof ApiError ? err.message : 'Could not connect to the server';
           Alert.alert(
-            'Nawyk zapisany, ale bez naklejki',
-            `${reason}\n\nMożesz przypisać naklejkę NFC później w szczegółach nawyku.`
+            'Habit saved, but without a sticker',
+            `${reason}\n\nYou can assign an NFC sticker later in the habit details.`
           );
         }
       }
       onSaveHabit();
     } catch (err) {
-      setSubmitError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+      setSubmitError(err instanceof ApiError ? err.message : 'Could not connect to the server');
     } finally {
       setIsSubmitting(false);
     }
@@ -161,7 +161,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
   if (loadError || !selectedTemplate) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.errorText}>{loadError ?? 'Brak dostępnych szablonów nawyków'}</Text>
+        <Text style={styles.errorText}>{loadError ?? 'No habit templates available'}</Text>
       </View>
     );
   }
@@ -173,7 +173,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
         <TouchableOpacity onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>{habit ? 'Edytuj Nawyk' : 'Dodaj Nawyk'}</Text>
+        <Text style={styles.title}>{habit ? 'Edit Habit' : 'Add Habit'}</Text>
         <Text style={styles.menuIcon}>⋮</Text>
       </View>
       
@@ -186,8 +186,8 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
               <View style={styles.readyDot} />
               <Text style={styles.nfcReadyLabel}>NFC READY</Text>
             </View>
-            <Text style={styles.nfcCardTitle}>Przypisz naklejkę NFC</Text>
-            <Text style={styles.nfcCardSub}>Naklejkę przypiszesz zaraz po zapisaniu nawyku.</Text>
+            <Text style={styles.nfcCardTitle}>Assign an NFC sticker</Text>
+            <Text style={styles.nfcCardSub}>You will assign the sticker right after saving the habit.</Text>
           </View>
           <View style={styles.nfcIconBox}>
             <Text style={styles.nfcIconEmoji}>📶</Text>
@@ -196,9 +196,9 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
 
         {pairAfterSave ? (
           <View style={styles.pairedSuccessBox}>
-            <Text style={styles.pairedText}>✅ Naklejka zostanie przypisana po zapisaniu</Text>
+            <Text style={styles.pairedText}>✅ The sticker will be assigned after saving</Text>
             <Button
-              title="Anuluj"
+              title="Cancel"
               onPress={() => setPairAfterSave(false)}
               variant="secondary"
               style={{ marginTop: 10 }}
@@ -207,13 +207,13 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
         ) : (
           <View style={styles.nfcButtonRow}>
             <Button
-              title="Przypisz po zapisaniu"
+              title="Assign after saving"
               onPress={() => setPairAfterSave(true)}
               variant="outline"
               style={styles.nfcButtonHalf}
             />
             <Button
-              title="Dodaj później"
+              title="Add later"
               onPress={handleSkipNfc}
               variant="secondary"
               style={styles.nfcButtonHalf}
@@ -223,7 +223,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
       </Card> )}
 
       {/* Habit Name — predefined dropdown */}
-      <Text style={styles.sectionLabel}>Nazwa nawyku</Text>
+      <Text style={styles.sectionLabel}>Habit name</Text>
       <TouchableOpacity
         style={styles.dropdownHeader}
         onPress={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -269,7 +269,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
       )}
 
             {/* Daily target */}
-      <Text style={styles.sectionLabel}>Ile razy dziennie</Text>
+      <Text style={styles.sectionLabel}>Times per day</Text>
       <View style={styles.stepperRow}>
         <TouchableOpacity
           style={[styles.stepperBtn, dailyTarget <= 1 && styles.stepperBtnDisabled]}
@@ -280,7 +280,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
         </TouchableOpacity>
         <View style={styles.stepperValueBox}>
           <Text style={styles.stepperValue}>{dailyTarget}</Text>
-          <Text style={styles.stepperUnit}>{dailyTarget === 1 ? 'raz' : 'razy'} dziennie</Text>
+          <Text style={styles.stepperUnit}>{dailyTarget === 1 ? 'time' : 'times'} per day</Text>
         </View>
         <TouchableOpacity
           style={[styles.stepperBtn, dailyTarget >= 20 && styles.stepperBtnDisabled]}
@@ -292,7 +292,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
       </View>
 
       {/* Frequency */}
-      <Text style={styles.sectionLabel}>Częstotliwość</Text>
+      <Text style={styles.sectionLabel}>Frequency</Text>
       <View style={styles.frequencySegmentContainer}>
         <TouchableOpacity
           style={[styles.frequencySegmentBtn, frequencyType === 'daily' && styles.frequencySegmentActive]}
@@ -302,7 +302,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
           }}
         >
           <Text style={[styles.frequencySegmentText, frequencyType === 'daily' && styles.frequencySegmentTextActive]}>
-            Codziennie
+            Daily
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -310,7 +310,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
           onPress={() => setFrequencyType('custom')}
         >
           <Text style={[styles.frequencySegmentText, frequencyType === 'custom' && styles.frequencySegmentTextActive]}>
-            Wybrane dni
+            Selected days
           </Text>
         </TouchableOpacity>
       </View>
@@ -338,7 +338,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
       </View>
 
       {/* Time of Day */}
-      <Text style={styles.sectionLabel}>Pora dnia</Text>
+      <Text style={styles.sectionLabel}>Time of day</Text>
       <View style={styles.timeOfDayRow}>
         {TIME_OF_DAY_OPTIONS.map((option) => {
           const isSelected = timeOfDay === option.key;
@@ -359,7 +359,7 @@ export const HabitFormScreen: React.FC<HabitFormScreenProps> = ({ habit,onBack, 
 
       {/* Submit Button */}
       <Button
-        title={habit ? 'Zapisz zmiany' : 'Zapisz Nawyk'}
+        title={habit ? 'Save changes' : 'Save Habit'}
         onPress={handleSubmit}
         size="lg"
         style={styles.saveButton}

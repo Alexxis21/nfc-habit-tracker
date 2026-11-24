@@ -21,17 +21,17 @@ describe('getProgressRatio', () => {
 });
 
 describe('getDailyStatusLabel', () => {
-  it('zwraca "Wykonano", gdy cel dnia jest domknięty', () => {
-    expect(getDailyStatusLabel(8, 8, true)).toBe('Wykonano');
-    expect(getDailyStatusLabel(1, 1, true)).toBe('Wykonano');
+  it('zwraca "Done", gdy cel dnia jest domknięty', () => {
+    expect(getDailyStatusLabel(8, 8, true)).toBe('Done');
+    expect(getDailyStatusLabel(1, 1, true)).toBe('Done');
   });
 
-  it('dla celu 1 pokazuje po prostu "Oczekuje"', () => {
-    expect(getDailyStatusLabel(0, 1, false)).toBe('Oczekuje');
+  it('dla celu 1 pokazuje po prostu "Pending"', () => {
+    expect(getDailyStatusLabel(0, 1, false)).toBe('Pending');
   });
 
   it('dla celu większego niż 1 pokazuje postęp i liczbę pozostałych skanów', () => {
-    expect(getDailyStatusLabel(3, 8, false)).toBe('Dziś 3/8 * pozostało 5');
-    expect(getDailyStatusLabel(0, 3, false)).toBe('Dziś 0/3 * pozostało 3');
+    expect(getDailyStatusLabel(3, 8, false)).toBe('Today 3/8 * 5 left');
+    expect(getDailyStatusLabel(0, 3, false)).toBe('Today 0/3 * 3 left');
   });
 });

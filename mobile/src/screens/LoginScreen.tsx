@@ -25,7 +25,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
       await login(email, password);
       onLoginSuccess();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się połączyć z serwerem');
+      setError(err instanceof ApiError ? err.message : 'Could not connect to the server');
     } finally {
       setIsSubmitting(false);
     }
@@ -38,13 +38,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.wordmark}>HabitTrack</Text>
-        <Text style={styles.title}>Witaj ponownie</Text>
-        <Text style={styles.subtitle}>Zaloguj się, aby wrócić do swoich nawyków.</Text>
+        <Text style={styles.title}>Welcome back</Text>
+        <Text style={styles.subtitle}>Log in to get back to your habits.</Text>
 
         <View style={styles.form}>
           <Input
             label="E-mail"
-            placeholder="jan.kowalski@przyklad.pl"
+            placeholder="john.smith@example.com"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -52,7 +52,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
             icon="✉️"
           />
           <Input
-            label="Hasło"
+            label="Password"
             placeholder="••••••••"
             value={password}
             onChangeText={setPassword}
@@ -64,7 +64,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         <Button
-          title="Zaloguj się"
+          title="Log in"
           onPress={handleSubmit}
           size="lg"
           style={styles.submitButton}
@@ -73,9 +73,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
         />
 
         <View style={styles.footerRow}>
-          <Text style={styles.footerText}>Nie masz jeszcze konta?</Text>
+          <Text style={styles.footerText}>No account yet?</Text>
           <TouchableOpacity onPress={onNavigateToRegister} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={styles.footerLink}> Zarejestruj się</Text>
+            <Text style={styles.footerLink}> Sign up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

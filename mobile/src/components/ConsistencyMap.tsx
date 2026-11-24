@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { theme } from '../theme';
 import { Card } from './ui/Card';
 
-const DAY_HEADERS = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Ndz'];
+const DAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 interface ConsistencyMapProps {
   weeks?: (0 | 1 | 2 | 3)[][];

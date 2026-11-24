@@ -32,7 +32,7 @@ export async function writeNdefUrl(url: string): Promise<WriteResult> {
     }
 
     await NfcManager.requestTechnology(NfcTech.Ndef, {
-      alertMessage: 'Zbliż telefon do naklejki NFC',
+      alertMessage: 'Hold your phone near the NFC sticker',
     });
 
     const ndefStatus = await NfcManager.ndefHandler.getNdefStatus();
@@ -72,23 +72,23 @@ export async function writeNdefUrl(url: string): Promise<WriteResult> {
 
 export function writeFailureMessage(result: WriteResult): string {
   if (result.status === 'cancelled') {
-    return 'Zapis na naklejce został anulowany.';
+    return 'Writing to the sticker was cancelled.';
   }
   if (result.status === 'written') {
-    return 'Adres zapisany na naklejce.';
+    return 'The address was written to the sticker.';
   }
   switch (result.reason) {
     case 'nfc_unsupported':
-      return 'Ten telefon nie obsługuje NFC.';
+      return 'This phone does not support NFC.';
     case 'nfc_disabled':
-      return 'NFC jest wyłączone. Włącz je w ustawieniach telefonu i spróbuj ponownie.';
+      return 'NFC is turned off. Turn it on in your phone settings and try again.';
     case 'tag_read_only':
-      return 'Ta naklejka jest zablokowana do zapisu. Użyj innej, czystej naklejki.';
+      return 'This sticker is write-protected. Use a different, blank sticker.';
     case 'tag_too_small':
-      return 'Adres nie mieści się na tej naklejce. Użyj naklejki NTAG215 lub o większej pojemności.';
+      return 'The address does not fit on this sticker. Use an NTAG215 sticker or one with more capacity.';
     case 'tag_lost':
-      return 'Naklejka została oddalona w trakcie zapisu. Przyłóż telefon i przytrzymaj go chwilę nieruchomo.';
+      return 'The sticker was moved away during writing. Place your phone against it and hold it still for a moment.';
     default:
-      return 'Nie udało się zapisać na naklejce. Zbliż telefon do naklejki i spróbuj ponownie.';
+      return 'Could not write to the sticker. Hold your phone near it and try again.';
   }
 }
