@@ -36,7 +36,7 @@ public class NfcTagService {
                 .orElseThrow(() -> new HabitNotFoundException(habitId));
 
         if (nfcTagRepository.existsByHabitId(habitId)) {
-            throw new TagAlreadyAssignedException("Ten nawyk ma już przypisaną naklejkę NFC");
+            throw new TagAlreadyAssignedException("This habit already has an NFC tag assigned.");
         }
 
         String tagId = generateTagId();

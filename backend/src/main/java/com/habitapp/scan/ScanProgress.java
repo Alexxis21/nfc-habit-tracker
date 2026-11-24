@@ -27,7 +27,7 @@ public class ScanProgress {
         try {
             return ZoneId.of(timeZone);
         } catch (DateTimeException e) {
-            throw new IllegalArgumentException("Niepoprawna strefa czasowa: " + timeZone);
+            throw new IllegalArgumentException("Invalid time zone: " + timeZone);
         }
     }
 

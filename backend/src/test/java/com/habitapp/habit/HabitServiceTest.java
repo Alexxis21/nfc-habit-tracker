@@ -120,7 +120,7 @@ class HabitServiceTest {
 
         assertThatThrownBy(() -> habitService.updateHabit(5L, 10L, request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("szablon");
+                .hasMessageContaining("template");
 
         verify(habitRepository, never()).save(any());
     }

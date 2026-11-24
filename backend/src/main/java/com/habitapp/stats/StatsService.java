@@ -44,7 +44,7 @@ public class StatsService {
     public StatsResponseDto getStats(Long userId, String range, String timeZone) {
         Integer days = RANGE_DAYS.get(range);
         if (days == null) {
-            throw new IllegalArgumentException("Nieprawidłowy zakres: " + range + " (dozwolone: 7d, 30d, 90d)");
+            throw new IllegalArgumentException("Invalid range: " + range + " (allowed: 7d, 30d, 90d)");
         }
 
         ZoneId zone = scanProgress.parseZone(timeZone);

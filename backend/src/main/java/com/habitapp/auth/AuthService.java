@@ -51,7 +51,7 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalStateException("Użytkownik zniknął po uwierzytelnieniu"));
+                .orElseThrow(() -> new IllegalStateException("User disappeared after authentication"));
 
         String token = jwtService.generateToken(user.getEmail());
 

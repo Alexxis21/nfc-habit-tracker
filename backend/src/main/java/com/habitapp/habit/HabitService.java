@@ -69,7 +69,7 @@ public class HabitService {
                 .orElseThrow(() -> new HabitNotFoundException(habitId));
 
         if (!habit.getTemplate().getId().equals(request.templateId())) {
-            throw new IllegalArgumentException("Nie można zmienić szablonu istniejącego nawyku");
+            throw new IllegalArgumentException("Cannot change the template of an existing habit");
         }
 
         habit.setDailyTargetCount(request.dailyTargetCount());
@@ -98,7 +98,7 @@ public class HabitService {
         try {
             return TimeOfDay.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Nieprawidłowa wartość timeOfDay: " + value);
+            throw new IllegalArgumentException("Invalid value for timeOfDay: " + value);
         }
     }
 
