@@ -9,6 +9,7 @@ Content-Type: application/json
 }
 
 ### Logowanie poprawnymi danymi (oczekiwane: 200 OK + token)
+# @name login
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
@@ -60,7 +61,7 @@ Content-Type: application/json
 ### =========================================================================
 ### CRUD dla nawyków — wklej token z odpowiedzi logowania (bez cudzysłowów) do @token
 ### =========================================================================
-@token = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzkxMTI1MjQ4LCJleHAiOjE3OTEyMTE2NDh9.93duzRSFmJZxbnwKBKOpzVcuaJF5qKXwJpdMx0oJhVoCyXlCGzEqZQL4VjhBX5GELnncO56ZmjlUkoHpMNJIGg
+@token = {{login.response.body.token}}
 
 ### Lista nawyków (oczekiwane: 200 OK, pusta lista [] za pierwszym razem)
 GET http://localhost:8080/api/habits
@@ -77,7 +78,7 @@ Content-Type: application/json
 {
   "templateId": 1,
   "dailyTargetCount": 8,
-  "timeOfDay": "RANO",
+  "timeOfDay": "MORNING",
   "targetDaysPerWeek": 7,
   "scheduledDays": [1, 2, 3, 4, 5, 6, 7],
   "remindersEnabled": true
@@ -91,7 +92,7 @@ Content-Type: application/json
 {
   "templateId": 999,
   "dailyTargetCount": 8,
-  "timeOfDay": "RANO",
+  "timeOfDay": "MORNING",
   "targetDaysPerWeek": 7,
   "scheduledDays": [1, 2, 3],
   "remindersEnabled": true
@@ -119,7 +120,7 @@ Content-Type: application/json
 {
   "templateId": 1,
   "dailyTargetCount": 10,
-  "timeOfDay": "WIECZOR",
+  "timeOfDay": "EVENING",
   "targetDaysPerWeek": 5,
   "scheduledDays": [1, 3, 5],
   "remindersEnabled": false
@@ -133,7 +134,7 @@ Content-Type: application/json
 {
   "templateId": 1,
   "dailyTargetCount": 8,
-  "timeOfDay": "RANO",
+  "timeOfDay": "MORNING",
   "targetDaysPerWeek": 7,
   "scheduledDays": [1, 2, 3],
   "remindersEnabled": true
@@ -264,3 +265,149 @@ Authorization: Bearer {{token}}
 
 ### Statystyki bez tokenu (oczekiwane: 403)
 GET http://localhost:8080/api/stats
+
+
+### =========================================================================
+### Znajomi — /api/friends
+### Potrzeba DWÓCH użytkowników: test@example.com (token z @name login wyżej)
+### oraz ewa@example.com (rejestracja i logowanie poniżej).
+### Uruchamiaj kolejno, od góry. Id relacji bierzemy z odpowiedzi na zaproszenie.
+### =========================================================================
+
+### Rejestracja drugiego użytkownika — Ewa (oczekiwane: 201 Created; przy powtórce 409 — wtedy pomiń)
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "ewa@example.com",
+  "password": "haslo1234",
+  "displayName": "Ewa"
+}
+
+### Logowanie Ewy (oczekiwane: 200 OK + token)
+# @name loginEwa
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ewa@example.com",
+  "password": "haslo1234"
+}
+
+###
+@tokenEwa = {{loginEwa.response.body.token}}
+
+### Test zaprasza Ewę (oczekiwane: 201 Created, relation = INVITATION_SENT)
+# @name invite
+POST http://localhost:8080/api/friends/invite
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "ewa@example.com"
+}
+
+###
+@friendshipId = {{invite.response.body.friendshipId}}
+
+### Ponowne zaproszenie tej samej osoby (oczekiwane: 409 Conflict — zaproszenie już wysłane)
+POST http://localhost:8080/api/friends/invite
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "ewa@example.com"
+}
+
+### Zaproszenie samego siebie (oczekiwane: 400 Bad Request)
+POST http://localhost:8080/api/friends/invite
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### Zaproszenie nieistniejącego użytkownika (oczekiwane: 404 Not Found)
+POST http://localhost:8080/api/friends/invite
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "nikt@example.com"
+}
+
+### Zaproszenie z nieprawidłowym adresem e-mail (oczekiwane: 400 Bad Request)
+POST http://localhost:8080/api/friends/invite
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "to-nie-jest-email"
+}
+
+### Lista Testa (oczekiwane: 200 OK, jeden wpis: Ewa, relation = INVITATION_SENT)
+GET http://localhost:8080/api/friends
+Authorization: Bearer {{token}}
+
+### Lista Ewy (oczekiwane: 200 OK, jeden wpis: Test User, relation = INVITATION_RECEIVED)
+GET http://localhost:8080/api/friends
+Authorization: Bearer {{tokenEwa}}
+
+### Test próbuje zaakceptować własne zaproszenie (oczekiwane: 404 Not Found — akceptować może tylko adresat)
+PUT http://localhost:8080/api/friends/{{friendshipId}}/accept
+Authorization: Bearer {{token}}
+
+### Ewa akceptuje (oczekiwane: 200 OK, relation = FRIEND)
+PUT http://localhost:8080/api/friends/{{friendshipId}}/accept
+Authorization: Bearer {{tokenEwa}}
+
+### Ewa akceptuje drugi raz (oczekiwane: 409 Conflict)
+PUT http://localhost:8080/api/friends/{{friendshipId}}/accept
+Authorization: Bearer {{tokenEwa}}
+
+### Test zaprasza Ewę, choć są już znajomymi (oczekiwane: 409 Conflict)
+POST http://localhost:8080/api/friends/invite
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "ewa@example.com"
+}
+
+### Lista Testa po akceptacji (oczekiwane: 200 OK, Ewa jako FRIEND)
+GET http://localhost:8080/api/friends
+Authorization: Bearer {{token}}
+
+### Usunięcie znajomego przez Ewę (oczekiwane: 204 No Content)
+DELETE http://localhost:8080/api/friends/{{friendshipId}}
+Authorization: Bearer {{tokenEwa}}
+
+### Usunięcie tej samej relacji ponownie (oczekiwane: 404 Not Found)
+DELETE http://localhost:8080/api/friends/{{friendshipId}}
+Authorization: Bearer {{tokenEwa}}
+
+### Lista Testa po usunięciu (oczekiwane: 200 OK, pusta lista)
+GET http://localhost:8080/api/friends
+Authorization: Bearer {{token}}
+
+### Wzajemne zaproszenie: Ewa zaprasza Testa (oczekiwane: 201 Created, INVITATION_SENT)
+POST http://localhost:8080/api/friends/invite
+Authorization: Bearer {{tokenEwa}}
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### ...a Test zaprasza Ewę w odpowiedzi (oczekiwane: 200 OK, od razu FRIEND — wzajemne zaproszenie to zgoda)
+POST http://localhost:8080/api/friends/invite
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "ewa@example.com"
+}
+
+### Lista bez tokenu (oczekiwane: 403)
+GET http://localhost:8080/api/friends
