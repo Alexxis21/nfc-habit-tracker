@@ -9,7 +9,7 @@ export interface HabitDto {
   category: string;
   categoryColor: string;
   dailyTargetCount: number;
-  timeOfDay: 'RANO' | 'POPOLUDNIE' | 'WIECZOR' | 'CALY_DZIEN';
+  timeOfDay: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'ALL_DAY';
   targetDaysPerWeek: number;
   scheduledDays: number[];
   currentStreak: number;
@@ -29,7 +29,7 @@ export interface HabitTemplateDto {
   categoryColor: string;
   defaultDailyTargetCount: number;
   unitLabel: string | null;
-  defaultTimeOfDay: 'RANO' | 'POPOLUDNIE' | 'WIECZOR' | 'CALY_DZIEN';
+  defaultTimeOfDay: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'ALL_DAY';
   defaultTargetDaysPerWeek: number;
 }
 

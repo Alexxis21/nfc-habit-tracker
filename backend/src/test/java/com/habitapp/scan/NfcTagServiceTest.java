@@ -38,7 +38,7 @@ class NfcTagServiceTest {
     @BeforeEach
     void setUp() {
         service = new NfcTagService(nfcTagRepository, habitRepository, SCAN_URL);
-        habit = new Habit(null, null, 1, TimeOfDay.RANO, 7, List.of(1, 2, 3, 4, 5, 6, 7));
+        habit = new Habit(null, null, 1, TimeOfDay.MORNING, 7, List.of(1, 2, 3, 4, 5, 6, 7));
     }
 
     @Test

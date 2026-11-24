@@ -66,8 +66,8 @@ class StatsServiceTest {
     void getStats_skladaNawykiIWynikZapytaniaWOdpowiedz() {
         User user = new User("test@example.com", "hash", "Test");
         HabitCategory category = new HabitCategory("Zdrowie", "#0EA5E9", "💧");
-        HabitTemplate template = new HabitTemplate(category, "Picie wody", "💧", 1, null, TimeOfDay.RANO, 7);
-        Habit habit = new Habit(user, template, 1, TimeOfDay.RANO, 7, List.of(1, 2, 3, 4, 5, 6, 7));
+        HabitTemplate template = new HabitTemplate(category, "Picie wody", "💧", 1, null, TimeOfDay.MORNING, 7);
+        Habit habit = new Habit(user, template, 1, TimeOfDay.MORNING, 7, List.of(1, 2, 3, 4, 5, 6, 7));
         ReflectionTestUtils.setField(habit, "id", 10L);
         ReflectionTestUtils.setField(habit, "createdAt", Instant.parse("2026-10-01T08:00:00Z"));
 

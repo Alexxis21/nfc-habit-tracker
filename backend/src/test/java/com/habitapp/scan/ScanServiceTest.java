@@ -150,9 +150,9 @@ class ScanServiceTest {
 
     private NfcTag tagFor(User owner, int dailyTarget) {
         HabitCategory category = new HabitCategory("Rozwój", "#00BFA5", "📖");
-        HabitTemplate template = new HabitTemplate(category, "Czytanie", "📖", dailyTarget, null, TimeOfDay.WIECZOR, 7);
+        HabitTemplate template = new HabitTemplate(category, "Czytanie", "📖", dailyTarget, null, TimeOfDay.EVENING, 7);
         Habit habit = withId(
-                new Habit(owner, template, dailyTarget, TimeOfDay.WIECZOR, 7, List.of(1, 2, 3, 4, 5, 6, 7)),
+                new Habit(owner, template, dailyTarget, TimeOfDay.EVENING, 7, List.of(1, 2, 3, 4, 5, 6, 7)),
                 10L
         );
         return withId(new NfcTag(habit, TAG_ID, "https://habitapp.pl/scan?tagId=" + TAG_ID), 20L);

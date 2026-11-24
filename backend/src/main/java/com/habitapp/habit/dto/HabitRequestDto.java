@@ -12,7 +12,7 @@ public record HabitRequestDto(
         @NotNull Long templateId,
         @Schema(description = "Count of successful scans in one day to complete the habit", example = "3")
         @NotNull @Min(1) Integer dailyTargetCount,
-        @Schema(description = "Time of day when the habit should be performed", allowableValues = {"RANO", "POPOLUDNIE", "WIECZOR", "CALY_DZIEN"})
+        @Schema(description = "Time of day when the habit should be performed", allowableValues = {"MORNING", "AFTERNOON", "EVENING", "ALL_DAY"})
         @NotNull String timeOfDay,
         @Schema(description = "Number of days per week the habit should be performed", example = "5")
         @NotNull @Min(1) Integer targetDaysPerWeek,

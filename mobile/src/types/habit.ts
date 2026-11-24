@@ -22,10 +22,10 @@ export interface Habit {
 }
 
 export const TIME_OF_DAY_LABELS: Record<HabitDto['timeOfDay'], Habit['timeOfDay']> = {
-  RANO: 'Rano',
-  POPOLUDNIE: 'Popołudnie',
-  WIECZOR: 'Wieczór',
-  CALY_DZIEN: 'Cały dzień',
+  MORNING: 'Rano',
+  AFTERNOON: 'Popołudnie',
+  EVENING: 'Wieczór',
+  ALL_DAY: 'Cały dzień',
 };
 
 export function mapHabitDtoToHabit(dto: HabitDto): Habit {

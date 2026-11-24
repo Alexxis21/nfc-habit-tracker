@@ -15,9 +15,9 @@ interface HabitFormScreenProps {
 }
 
 const TIME_OF_DAY_OPTIONS = [
-  { key: 'Rano', label: 'Rano', icon: '☀️', backendValue: 'RANO' },
-  { key: 'Popołudnie', label: 'Popołudnie', icon: '🌤️', backendValue: 'POPOLUDNIE' },
-  { key: 'Wieczór', label: 'Wieczór', icon: '🌙', backendValue: 'WIECZOR' },
+  { key: 'Rano', label: 'Rano', icon: '☀️', backendValue: 'MORNING' },
+  { key: 'Popołudnie', label: 'Popołudnie', icon: '🌤️', backendValue: 'AFTERNOON' },
+  { key: 'Wieczór', label: 'Wieczór', icon: '🌙', backendValue: 'EVENING' },
 ] as const;
 
 // Konwencja ISO 8601: poniedziałek = 1, ..., niedziela = 7 — tak samo interpretuje to backend.

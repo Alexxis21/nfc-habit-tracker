@@ -60,12 +60,12 @@ class HabitServiceTest {
         user = new User("test@example.com", "hashed-password", "Test User");
 
         HabitCategory category = new HabitCategory("Zdrowie", "#0EA5E9", "💧");
-        template = new HabitTemplate(category, "Picie wody", "💧", 8, "szklanek", TimeOfDay.RANO, 7);
+        template = new HabitTemplate(category, "Picie wody", "💧", 8, "szklanek", TimeOfDay.MORNING, 7);
     }
 
     @Test
     void createHabit_zPoprawnymiDanymi_zwracaZapisanyNawyk() {
-        HabitRequestDto request = new HabitRequestDto(1L, 8, "RANO", 7, List.of(1, 2, 3, 4, 5, 6, 7), true);
+        HabitRequestDto request = new HabitRequestDto(1L, 8, "MORNING", 7, List.of(1, 2, 3, 4, 5, 6, 7), true);
 
         when(habitTemplateRepository.findById(1L)).thenReturn(Optional.of(template));
         when(habitRepository.save(any(Habit.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -80,7 +80,7 @@ class HabitServiceTest {
 
     @Test
     void createHabit_zNieistniejacymSzablonem_rzucaWyjatek() {
-        HabitRequestDto request = new HabitRequestDto(999L, 8, "RANO", 7, List.of(1, 2, 3), true);
+        HabitRequestDto request = new HabitRequestDto(999L, 8, "MORNING", 7, List.of(1, 2, 3), true);
 
         when(habitTemplateRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -102,7 +102,7 @@ class HabitServiceTest {
 
     @Test
     void updateHabit_nieistniejacegoNawyku_rzucaWyjatek() {
-        HabitRequestDto request = new HabitRequestDto(1L, 8, "RANO", 7, List.of(1, 2, 3), true);
+        HabitRequestDto request = new HabitRequestDto(1L, 8, "MORNING", 7, List.of(1, 2, 3), true);
 
         when(habitRepository.findByIdAndUserId(42L, 5L)).thenReturn(Optional.empty());
 
@@ -112,9 +112,9 @@ class HabitServiceTest {
 
     @Test
     void updateHabit_zInnymSzablonem_rzucaWyjatekINicNieZapisuje() {
-        Habit habit = new Habit(user, template, 8, TimeOfDay.RANO, 7, List.of(1, 2, 3, 4, 5, 6, 7));
+        Habit habit = new Habit(user, template, 8, TimeOfDay.MORNING, 7, List.of(1, 2, 3, 4, 5, 6, 7));
         ReflectionTestUtils.setField(template, "id", 7L);
-        HabitRequestDto request = new HabitRequestDto(8L, 8, "RANO", 7, List.of(1, 2, 3), true);
+        HabitRequestDto request = new HabitRequestDto(8L, 8, "MORNING", 7, List.of(1, 2, 3), true);
 
         when(habitRepository.findByIdAndUserId(10L, 5L)).thenReturn(Optional.of(habit));
 
@@ -127,7 +127,7 @@ class HabitServiceTest {
 
         @Test
     void getHabitsForUser_zwracaIdNaklejkiDzisiejszyPostepIOstatniSkan() {
-        Habit habit = new Habit(user, template, 8, TimeOfDay.RANO, 7, List.of(1, 2, 3, 4, 5, 6, 7));
+        Habit habit = new Habit(user, template, 8, TimeOfDay.MORNING, 7, List.of(1, 2, 3, 4, 5, 6, 7));
         ReflectionTestUtils.setField(habit, "id", 10L);
         ReflectionTestUtils.setField(template, "id", 7L);
         NfcTag tag = new NfcTag(habit, "04:AA", "https://habitapp.pl/scan?tagId=04:AA");
