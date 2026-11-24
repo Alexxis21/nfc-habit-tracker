@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import static org.mockito.ArgumentMatchers.eq;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -61,6 +62,22 @@ class ScanServiceTest {
         assertThat(response.currentStreak()).isEqualTo(1);
         assertThat(response.pointsAwarded()).isEqualTo(12);
         verify(habitRepository).save(tag.getHabit());
+    }
+
+    @Test
+    void scan_skanPonadCelNieDajePunktow() {
+        NfcTag tag = tagFor(user, 1);
+        tag.getHabit().setCurrentStreak(1);
+        
+        when(nfcTagRepository.findByTagId(TAG_ID)).thenReturn(Optional.of(tag));
+        when(scanLogRepository.countByHabitIdAndStatusAndScannedAtGreaterThanEqualAndScannedAtLessThan(eq(10L), eq(ScanStatus.SUCCESS), any(Instant.class), any(Instant.class))).thenReturn(1L); 
+        ScanResponseDto response = serviceAt(NOW).scan(user, TAG_ID, null);
+
+        assertThat(response.todayCount()).isEqualTo(2);
+        assertThat(response.completedToday()).isTrue();
+        assertThat(response.currentStreak()).isEqualTo(1);
+        assertThat(response.pointsAwarded()).isEqualTo(0);
+        verify(habitRepository, never()).save(any());
     }
 
     @Test

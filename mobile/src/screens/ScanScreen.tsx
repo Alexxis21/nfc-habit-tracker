@@ -88,7 +88,11 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({ tagId, onDone, onLoginRe
             Dzisiaj: {state.result.todayCount}/{state.result.dailyTargetCount}
           </Text>
           <Text style={styles.line}>Passa: {state.result.currentStreak} dni</Text>
-          <Text style={styles.points}>+{state.result.pointsAwarded} pkt</Text>
+          {state.result.pointsAwarded > 0 ? (
+            <Text style={styles.points}>+{state.result.pointsAwarded} pkt</Text>
+          ) : (
+          <Text style={styles.pointsNote}>Dodatkowe skany nie dają punktów</Text>
+          )}
           {state.result.completedToday && <Text style={styles.goal}>Cel na dziś osiągnięty!</Text>}
         </>
       )}
@@ -147,6 +151,13 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryDark,
     fontFamily: theme.fonts.headline,
     marginTop: 14,
+  },
+    pointsNote: {
+    fontSize: 14,
+    color: theme.colors.onSurfaceVariant,
+    fontFamily: theme.fonts.body,
+    marginTop: 14,
+    textAlign: 'center',
   },
   goal: {
     fontSize: 14,

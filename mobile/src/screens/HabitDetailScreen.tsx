@@ -45,7 +45,8 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
     try {
       const result = await scanTag(habit.nfcTagId);
       setHabit(applyScanResult(habit, result));
-      Alert.alert('✅ Skan NFC udany!', `+${result.pointsAwarded} pkt • passa: ${result.currentStreak} dni`);
+      const pointsText = result.pointsAwarded > 0 ? `+${result.pointsAwarded} pkt` : 'bez punktów (cel osiągnięty)';
+      Alert.alert('✅ Skan NFC udany!', `${pointsText} • passa: ${result.currentStreak} dni`);
     } catch (err) {
       Alert.alert('Skan nieudany', errorMessage(err));
     }
@@ -72,7 +73,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
       if (!habit.nfcTagUrl) return;
       const result = await writeNdefUrl(habit.nfcTagUrl);
       if (result.status === 'written') {
-        Alert.alert('✅ Zapisano', writeFailureMessage(result));
+        Alert.alert('Zapisano', writeFailureMessage(result));
       } else if (result.status === 'failed') {
         Alert.alert('Nie udało się zapisać', writeFailureMessage(result));
       }

@@ -34,4 +34,8 @@ public final class ScanRules {
     public static int pointsFor(int streak) {
         return BASE_POINTS + Math.min(streak * STREAK_BONUS_PER_DAY, MAX_STREAK_BONUS);
     }
+
+    public static int pointsForScan(int streak, long scansToday, int dailyTarget) {
+        return scansToday <=dailyTarget ? pointsFor(streak) : 0;
+    }
 }

@@ -29,8 +29,6 @@ export class UnauthorizedError extends ApiError {
   }
 }
 
-// Pozwala AuthContext zareagować na wygasły/nieprawidłowy token (np. wyczyścić stan
-// zalogowanego użytkownika), bez importowania Reacta w tym module.
 let unauthorizedHandler: (() => void) | null = null;
 
 export function registerUnauthorizedHandler(handler: () => void): void {

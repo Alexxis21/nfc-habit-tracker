@@ -72,7 +72,7 @@ public class ScanService {
             habitRepository.save(habit);
         }
 
-        int points = ScanRules.pointsFor(habit.getCurrentStreak());
+        int points = ScanRules.pointsForScan(habit.getCurrentStreak(), countAfter, target);
         scanLogRepository.save(new ScanLog(habit, tag, user, now, ScanStatus.SUCCESS, points));
 
         return new ScanResponseDto(

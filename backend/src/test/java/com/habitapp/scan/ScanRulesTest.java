@@ -85,4 +85,19 @@ class ScanRulesTest {
     void pointsFor_bonusJestOgraniczonyDoPiecdziesieciu() {
         assertThat(ScanRules.pointsFor(100)).isEqualTo(60);
     }
+
+        @Test
+    void pointsForScan_skanWRamachCelu_naliczaPunkty() {
+        assertThat(ScanRules.pointsForScan(3, 2, 3)).isEqualTo(16);
+    }
+
+    @Test
+    void pointsForScan_skanOsiagajacyCel_naliczaPunkty() {
+        assertThat(ScanRules.pointsForScan(3, 3, 3)).isEqualTo(16);
+    }
+
+    @Test
+    void pointsForScan_skanPonadCel_zwracaZero() {
+        assertThat(ScanRules.pointsForScan(3, 4, 3)).isZero();
+    }
 }
