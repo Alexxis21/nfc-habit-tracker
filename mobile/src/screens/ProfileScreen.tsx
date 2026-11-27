@@ -2,9 +2,9 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { theme } from '../theme';
 import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
+import { FriendsSection } from '../components/FriendsSection';
 
 interface ProfileScreenProps {
   onLogout: () => void;
@@ -16,7 +16,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
   const avatarInitial = displayName.charAt(0).toUpperCase() || '?';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <Text style={styles.subhead}>Your Account</Text>
         <Text style={styles.title}>Profile</Text>
@@ -28,16 +28,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
         </View>
         <Text style={styles.name}>{displayName}</Text>
         <Text style={styles.email}>{user?.email}</Text>
-        <Badge label="🔥 Level 4 · 320 XP" backgroundColor={theme.colors.secondaryContainer} color={theme.colors.primaryDark} style={{ marginTop: 10 }} />
       </Card>
 
-      <Card style={styles.comingSoonCard}>
-        <Text style={styles.comingSoonIcon}>👥</Text>
-        <Text style={styles.comingSoonTitle}>Friends and challenges</Text>
-        <Text style={styles.comingSoonText}>
-          Social features (leaderboard, group challenges) will arrive in a later stage of the project.
-        </Text>
-      </Card>
+      <FriendsSection />
+
 
       <Button
         title="Log out"
@@ -104,28 +98,6 @@ const styles = StyleSheet.create({
     color: theme.colors.onSurfaceVariant,
     marginTop: 2,
     fontFamily: theme.fonts.label,
-  },
-  comingSoonCard: {
-    alignItems: 'center',
-    paddingVertical: 28,
-  },
-  comingSoonIcon: {
-    fontSize: 32,
-    marginBottom: 10,
-  },
-  comingSoonTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.colors.onSurface,
-    marginBottom: 6,
-    fontFamily: theme.fonts.headline,
-  },
-  comingSoonText: {
-    fontSize: 13,
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 18,
-    fontFamily: theme.fonts.body,
   },
   logoutButton: {
     marginTop: 24,

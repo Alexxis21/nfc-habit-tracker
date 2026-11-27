@@ -40,4 +40,5 @@ public interface ScanLogRepository extends JpaRepository<ScanLog, Long> {
             @Param("zone") String zone,
             @Param("from") Instant from,
             @Param("to") Instant to);
+            
 }

@@ -3,6 +3,8 @@ package com.habitapp.friend;
 import com.habitapp.auth.UserPrincipal;
 import com.habitapp.friend.dto.FriendDto;
 import com.habitapp.friend.dto.FriendInviteRequestDto;
+import com.habitapp.friend.dto.FriendLookupRequestDto;
+import com.habitapp.friend.dto.FriendLookupResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -75,5 +77,13 @@ public class FriendshipController {
     ) {
         friendshipService.remove(principal.getUser(), id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/lookup")
+    public FriendLookupResponseDto lookup(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody FriendLookupRequestDto request
+    ) {
+        return friendshipService.lookup(principal.getUser(), request.email());
     }
 }
