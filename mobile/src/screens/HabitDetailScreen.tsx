@@ -52,7 +52,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({ habit: ini
     }
   };
 
-        const handleLinkTag = async () => {
+    const handleLinkTag = async () => {
       try {
         const outcome = await assignAndWriteTag(habit.id);
         setHabit({ ...habit, nfcTagId: outcome.tag.tagId, nfcTagUrl: outcome.tag.ndefUrl });

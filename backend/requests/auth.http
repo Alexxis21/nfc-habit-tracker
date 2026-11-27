@@ -411,3 +411,52 @@ Content-Type: application/json
 
 ### Lista bez tokenu (oczekiwane: 403)
 GET http://localhost:8080/api/friends
+
+### =========================================================================
+### Podgląd użytkownika przed zaproszeniem — POST /api/friends/lookup
+### Wymaga zalogowanych: test@example.com (@name login) i istniejącej Ewy.
+### =========================================================================
+
+### Podgląd Ewy (oczekiwane: 200 OK, tylko displayName)
+POST http://localhost:8080/api/friends/lookup
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "ewa@example.com"
+}
+
+### Podgląd samego siebie (oczekiwane: 400 Bad Request)
+POST http://localhost:8080/api/friends/lookup
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### Podgląd nieistniejącego użytkownika (oczekiwane: 404 Not Found)
+POST http://localhost:8080/api/friends/lookup
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "nikt@example.com"
+}
+
+### Niepełny adres (oczekiwane: 400 Bad Request)
+POST http://localhost:8080/api/friends/lookup
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "ewa@"
+}
+
+### Podgląd bez tokenu (oczekiwane: 403)
+POST http://localhost:8080/api/friends/lookup
+Content-Type: application/json
+
+{
+  "email": "ewa@example.com"
+}

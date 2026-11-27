@@ -9,6 +9,7 @@ import com.habitapp.auth.User;
 import com.habitapp.auth.UserRepository;
 import com.habitapp.friend.dto.FriendDto;
 import java.util.List;
+import com.habitapp.friend.dto.FriendLookupResponseDto;
 
 
 @Service 
@@ -86,4 +87,16 @@ public class FriendshipService {
         }
         return new FriendDto(friendship.getId(), other.getId(), other.getDisplayName(), other.getEmail(), relation);
     }
+
+    @Transactional(readOnly = true)
+    public FriendLookupResponseDto lookup(User me, String email){
+        String trimmed = email.trim();
+        User target = userRepository.findByEmail(trimmed).orElseThrow(() -> new FriendsUserNotFoundException(trimmed));
+        if (target.getId().equals(me.getId())){
+            throw new IllegalArgumentException("Cannot look up yourself as a friend");
+        }
+        return new FriendLookupResponseDto(target.getDisplayName());
+    }
+
+
 }
